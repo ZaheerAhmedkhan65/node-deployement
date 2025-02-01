@@ -1,38 +1,20 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
 body{
-    background-color: teal;
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
-    height: calc(100vh - 50px);
+    height: calc(100vh - 136px);
 }
 
-h1{
-    text-align: center;
-    padding: 20px;
-}
-
-header{
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px;
+nav{
     background-color: black;
 }
 
-header a{    
-    text-decoration: none;
-    color: white;
+.main-container{
+    height: 100%;
+    overflow-x: hidden;
+    margin: 0 5%;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
 
 footer{
     text-align: center;
     padding: 20px;
     background-color: black;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
 }
