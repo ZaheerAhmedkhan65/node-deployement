@@ -18,5 +18,5 @@ db.connect((err) => {
     console.log('Connected to MySQL database');
   }
 });
-// ZHsfYjMFG5BB6clQ    password of the tidb cluster (node)
+// ZHsfYjMFG5BB6clQ    /password of the tidb cluster (node)/
 module.exports = db;
