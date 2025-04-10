@@ -20,7 +20,7 @@ class User {
         return users;
     }
 
-    static async findByUsername(username){
+    static async findUser(username){
         const [user] = await db.query('SELECT * FROM users WHERE name = ? OR email = ?', [username,username]);
         return user[0];
     }
@@ -28,6 +28,44 @@ class User {
     static async getUserPosts(userId) {
         const [posts] = await db.query('SELECT * FROM posts WHERE user_id = ?', [userId]);
         return posts;
+    }
+
+    static async findByEmail(email) {
+        const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        return rows[0];
+    }
+
+    static async findByResetToken(token) {
+        const [rows] = await db.query(
+            'SELECT * FROM users WHERE resetToken = ? AND resetTokenExpiry > NOW()',
+            [token]
+        );
+        return rows[0];
+    }
+
+    static async updateUserPassword(id, updates) {
+        const { resetToken, resetTokenExpiry, password } = updates;
+        
+        const [result] = await db.query(
+            'UPDATE users SET resetToken = ?, resetTokenExpiry = ?, password = ? WHERE id = ?',
+            [resetToken, resetTokenExpiry, password, id]
+        );
+        return result;
+    }
+
+    static async updateUser(id, updates) {
+        const { resetToken, resetTokenExpiry } = updates;
+        
+        const [result] = await db.query(
+            'UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?',
+            [resetToken, resetTokenExpiry, id]
+        );
+        return result;
+    }
+
+    static async findByUsername(name) {
+        const [rows] = await db.query('SELECT * FROM users WHERE name = ?', [name]);
+        return rows[0];
     }
 }
 
