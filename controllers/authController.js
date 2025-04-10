@@ -78,7 +78,7 @@ const forgotPassword = async (req, res) => {
         console.log("email : ",email);
 
         // Send email with reset link
-        const resetUrl = `http://${req.headers.host}/auth/reset-password/${resetToken}`;
+        const resetUrl = `https://${req.headers.host}/auth/reset-password/${resetToken}`;
         
         await transporter.sendMail({
             to: user.email,
