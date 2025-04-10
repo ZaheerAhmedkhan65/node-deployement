@@ -1,0 +1,41 @@
+<%- include('partials/_header') %>
+ 
+<div class="container">
+    <div class="auth-card bg-white">
+        <div class="auth-header">
+            <h5 class="mb-0">Create your account</h5>
+        </div>
+        <div class="auth-body">
+            <form action="/auth/signup" method="post">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="show-password-checkbox">
+                        <label class="form-check-label" for="show-password-checkbox">
+                            Show password
+                        </label>
+                    </div>
+                </div>
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-signin">Sign up</button>
+                </div>
+                <div class="text-center pt-3 border-top">
+                    <span class="text-muted">Already have an account?</span>
+                    <a href="/auth/signin" class="text-decoration-none ms-2">Sign in</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/js/showPassword.js"></script>
+<%- include('partials/_footer') %>

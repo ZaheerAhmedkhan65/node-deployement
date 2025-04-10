@@ -27,10 +27,33 @@
                         <a class="nav-link text-white" href="/posts">Posts</a>
                     </li>
                 </ul>
+
                 <form class="d-flex" action="/posts/search" method="GET">
                     <input class="form-control me-2" type="text" name="query" placeholder="Search for posts..." required>
                     <button  class="btn btn-outline-success" type="submit">Search</button>
                 </form>
+                
+                <div class="mx-5">
+                <%if(user){%>
+                    <div class="dropstart">
+                        <button class="bg-transparent border-0 outline-none text-white" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <%= user.name %>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="/auth/logout">logout</a></li>
+                        </ul>
+                      </div>
+                      <%}else{%>
+                        <div class="d-flex align-items-center gap-3">
+                            <a class="nav-lin text-white text-decoration-none" href="/auth/signin">
+                                sign in
+                            </a>
+                            <a class="nav-lin text-white text-decoration-none" href="/auth/signup">
+                                sign up
+                            </a>
+                        </div>
+                <%}%>
+            </div>
             </div>
         </div>
     </nav>
