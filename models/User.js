@@ -25,6 +25,11 @@ class User {
         return user[0];
     }
 
+    static async findById(id){
+        const [user] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+        return user[0];
+    }
+
     static async getUserPosts(userId) {
         const [posts] = await db.query('SELECT * FROM posts WHERE user_id = ?', [userId]);
         return posts;

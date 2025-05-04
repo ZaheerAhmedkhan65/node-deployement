@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
 // Configure email transporter (add this at the top)
@@ -44,14 +45,30 @@ const login = async (req, res) => {
         return res.status(400).json({ message: 'Invalid credentials' });
     }
      // Store user in session
-     req.session.user = user;
-     req.session.userId = user.id;
-     req.session.username = user.username;
+    // Generate JWT with role
+            const token = jwt.sign(
+                { 
+                    userId: user.id, 
+                    username: user.name,
+                    role: user.role,
+                    email: user.email
+                }, 
+                process.env.JWT_SECRET , 
+                { expiresIn: '7d' }
+            );
+            
+            // Set the token in a cookie
+            res.cookie('token', token, { 
+                httpOnly: true, 
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000 
+            });
  
     res.redirect('/');
 }
 const logout = (req, res) => {
-    req.session.destroy();
+    res.clearCookie('token');
     res.redirect('/auth/signin');
 }
 const forgotPassword = async (req, res) => {
@@ -107,6 +124,46 @@ const forgotPassword = async (req, res) => {
         });
     }
 };
+
+const refreshToken = async (req, res) => {
+    const token = req.cookies.token;
+    
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+        
+        // Verify user still exists
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(401).json({ message: 'User no longer exists' });
+        }
+        
+        // Issue a new token with renewed expiration
+        const newToken = jwt.sign(
+            { 
+                userId: decoded.userId, 
+                username: decoded.username,
+                role: user.role 
+            }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+        
+        res.cookie('token', newToken, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
+        res.json({ success: true });
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+}
+
 const resetPassword = async (req, res) => {
     const { token } = req.params;
     
@@ -160,4 +217,4 @@ const updatePassword = async (req, res) => {
         res.redirect("/auth/signup");
     }
 };
-module.exports = { signup, login, logout, forgotPassword, resetPassword, updatePassword };
+module.exports = { signup, login, logout, forgotPassword, resetPassword, updatePassword, refreshToken };

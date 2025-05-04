@@ -24,15 +24,39 @@
                                             <%= post.content %>
                                         </p>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button id="edit-post-btn-<%= post.id %>" class="btn btn-sm btn-info edit-post-btn" data-bs-toggle="modal"
-                                            data-bs-target="#editPostModal" data-id="<%= post.id %>"
-                                            data-title="<%= post.title %>" data-content="<%= post.content %>"
-                                            data-published_at="<%= post.published_at %>">
-                                            Edit
-                                        </button>
-                                        <button type="button" data-post-id="<%= post.id %>" class="btn btn-sm btn-danger delete-post-btn">Delete</button>
-                                    </div>
+                                    <!-- Inside your post loop -->
+<div class="d-flex align-items-center gap-2">
+    <button id="edit-post-btn-<%= post.id %>" class="btn btn-sm btn-info edit-post-btn" 
+            data-bs-toggle="modal" data-bs-target="#editPostModal" 
+            data-id="<%= post.id %>"
+            data-title="<%= post.title %>" 
+            data-content="<%= post.content %>"
+            data-published_at="<%= post.published_at %>">
+        Edit
+    </button>
+    <button type="button" data-post-id="<%= post.id %>" 
+            class="btn btn-sm btn-danger delete-post-btn">
+        Delete
+    </button>
+    
+    <!-- Like/Dislike buttons -->
+    <div class="btn-group" role="group">
+        <button class="btn btn-sm <%= post.userReaction === 'like' ? 'btn-success' : 'btn-outline-success' %> like-btn" 
+                data-post-id="<%= post.id %>">
+            Like (<span class="like-count"><%= post.likes %></span>)
+        </button>
+        <button class="btn btn-sm <%= post.userReaction === 'dislike' ? 'btn-danger' : 'btn-outline-danger' %> dislike-btn" 
+                data-post-id="<%= post.id %>">
+            Dislike (<span class="dislike-count"><%= post.dislikes %></span>)
+        </button>
+    </div>
+    
+    <!-- Repost button -->
+    <button class="btn btn-sm <%= post.hasReposted ? 'btn-primary' : 'btn-outline-primary' %> repost-btn" 
+            data-post-id="<%= post.id %>">
+        Repost (<span class="repost-count"><%= post.reposts %></span>)
+    </button>
+</div>
                                 </div>
                             </div>
 
@@ -119,4 +143,125 @@
         <script src="/js/editPost.js"></script>
         <script src="/js/deletePost.js"></script>
         <script src="/js/showNotification.js"></script>
+        <script>
+            // Like functionality
+document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        const postElement = document.getElementById(`post-${postId}`);
+        console.log(postElement);
+        
+        try {
+            const response = await fetch(`/posts/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ type: 'like' })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update counts
+                postElement.querySelector('.like-count').textContent = data.reactions.likes;
+                postElement.querySelector('.dislike-count').textContent = data.reactions.dislikes;
+                
+                // Update button states
+                const likeBtn = postElement.querySelector('.like-btn');
+                const dislikeBtn = postElement.querySelector('.dislike-btn');
+                
+                if (data.userReaction === 'like') {
+                    likeBtn.classList.replace('btn-outline-success', 'btn-success');
+                    dislikeBtn.classList.replace('btn-danger', 'btn-outline-danger');
+                } else {
+                    likeBtn.classList.replace('btn-success', 'btn-outline-success');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+// Dislike functionality
+document.querySelectorAll('.dislike-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        const postElement = document.getElementById(`post-${postId}`);
+        
+        try {
+            const response = await fetch(`/posts/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ type: 'dislike' })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update counts
+                postElement.querySelector('.like-count').textContent = data.reactions.likes;
+                postElement.querySelector('.dislike-count').textContent = data.reactions.dislikes;
+                
+                // Update button states
+                const likeBtn = postElement.querySelector('.like-btn');
+                const dislikeBtn = postElement.querySelector('.dislike-btn');
+                
+                if (data.userReaction === 'dislike') {
+                    dislikeBtn.classList.replace('btn-outline-danger', 'btn-danger');
+                    likeBtn.classList.replace('btn-success', 'btn-outline-success');
+                } else {
+                    dislikeBtn.classList.replace('btn-danger', 'btn-outline-danger');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+
+// Repost functionality
+document.querySelectorAll('.repost-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        const postElement = document.getElementById(`post-${postId}`);
+        console.log(postElement);
+        try {
+            const response = await fetch(`/posts/${postId}/repost`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Update repost count
+                postElement.querySelector('.repost-count').textContent = data.repostCount;
+                
+                // Toggle button state
+                const repostBtn = postElement.querySelector('.repost-btn');
+                if (data.hasReposted) {
+                    repostBtn.classList.replace('btn-outline-primary', 'btn-primary');
+                } else {
+                    repostBtn.classList.replace('btn-primary', 'btn-outline-primary');
+                }
+                
+                // showNotification(data.action === 'added' ? 'Post reposted!' : 'Repost removed', 'success');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            // showNotification('Failed to process repost', 'error');
+        }
+    });
+});
+        </script>
+            <script src="/js/userSession.js"></script>
         <%- include('partials/_footer') %>

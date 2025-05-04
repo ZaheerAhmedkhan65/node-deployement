@@ -2,9 +2,236 @@
 <div class="row">
     <div class="card border-0">
         <div class="card-body">
-            <h1>Welcome to Blog</h1>
-            <p>This is a simple blog app built with Node.js and Express.</p>
+            <h1>Trending Posts</h1>
+            <div class="time-filters mb-3">
+                <button class="btn btn-sm btn-outline-primary time-filter active" data-period="1 HOUR">Hot Now</button>
+                <button class="btn btn-sm btn-outline-primary time-filter" data-period="24 HOUR">Today</button>
+                <button class="btn btn-sm btn-outline-primary time-filter" data-period="7 DAY">This Week</button>
+            </div>
+            <div class="posts-container">
+                <!-- Posts will be loaded here via AJAX -->
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const postsContainer = document.querySelector('.posts-container');
+    const timeFilters = document.querySelectorAll('.time-filter');
+    
+    // Function to load posts
+    const loadTrendingPosts = async (period = '1 HOUR') => {
+        try {
+            postsContainer.innerHTML = `
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            const response = await fetch(`/posts/trending?period=${encodeURIComponent(period)}`);
+            const posts = await response.json();
+            
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<div class="alert alert-info">No trending posts found. Be the first to create one!</div>';
+                return;
+            }
+            
+            postsContainer.innerHTML = posts.map(post => `
+                <div class="card mb-3 post-card" id="post-${post.id}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="${post.user.avatar || '/images/default-avatar.png'}" 
+                                 alt="${post.user.name}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40">
+                            <h5 class="mb-0">${post.user.name}</h5>
+                        </div>
+                        <h5 class="card-title">${post.title}</h5>
+                        <p class="card-text">${post.content}</p>
+                        <div class="text-muted small mb-3">
+                            ${new Date(post.created_at).toLocaleString()}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group reaction-buttons">
+                                <button class="btn btn-sm ${post.userReaction === 'like' ? 'btn-success' : 'btn-outline-success'} like-btn" 
+                                        data-post-id="${post.id}">
+                                    👍 <span class="like-count">${post.like_count || 0}</span>
+                                </button>
+                                <button class="btn btn-sm ${post.userReaction === 'dislike' ? 'btn-danger' : 'btn-outline-danger'} dislike-btn" 
+                                        data-post-id="${post.id}">
+                                    👎 <span class="dislike-count">${post.dislike_count || 0}</span>
+                                </button>
+                                <button class="btn btn-sm ${post.hasReposted ? 'btn-primary' : 'btn-outline-primary'} repost-btn" 
+                                        data-post-id="${post.id}">
+                                    🔄 <span class="repost-count">${post.repost_count || 0}</span>
+                                </button>
+                            </div>
+                            <span class="badge bg-secondary">
+                                🔥 ${Math.round(post.engagement_score || 0)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Initialize event listeners
+            setupReactionButtons();
+            
+        } catch (error) {
+            console.error('Error loading trending posts:', error);
+            postsContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    Failed to load trending posts. Please try again later.
+                </div>
+            `;
+        }
+    };
+    
+    // Time filter event listeners
+    timeFilters.forEach(filter => {
+        filter.addEventListener('click', function() {
+            timeFilters.forEach(f => f.classList.remove('active'));
+            this.classList.add('active');
+            loadTrendingPosts(this.dataset.period);
+        });
+    });
+    
+    // Function to setup reaction buttons
+    const setupReactionButtons = () => {
+        // Like functionality
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const postId = this.dataset.postId;
+                const postElement = document.getElementById(`post-${postId}`);
+                
+                try {
+                    const response = await fetch(`/posts/${postId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        },
+                        body: JSON.stringify({ type: 'like' })
+                    });
+                    
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const data = await response.json();
+                    
+                    // Update UI
+                    postElement.querySelector('.like-count').textContent = data.reactions.likes;
+                    postElement.querySelector('.dislike-count').textContent = data.reactions.dislikes;
+                    
+                    // Update button states
+                    const likeBtn = postElement.querySelector('.like-btn');
+                    const dislikeBtn = postElement.querySelector('.dislike-btn');
+                    
+                    if (data.userReaction === 'like') {
+                        likeBtn.classList.replace('btn-outline-success', 'btn-success');
+                        dislikeBtn.classList.replace('btn-danger', 'btn-outline-danger');
+                    } else {
+                        likeBtn.classList.replace('btn-success', 'btn-outline-success');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('You need to login to like posts');
+                }
+            });
+        });
+        
+        // Dislike functionality
+        document.querySelectorAll('.dislike-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const postId = this.dataset.postId;
+                const postElement = document.getElementById(`post-${postId}`);
+                
+                try {
+                    const response = await fetch(`/posts/${postId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        },
+                        body: JSON.stringify({ type: 'dislike' })
+                    });
+                    
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const data = await response.json();
+                    
+                    // Update UI
+                    postElement.querySelector('.like-count').textContent = data.reactions.likes;
+                    postElement.querySelector('.dislike-count').textContent = data.reactions.dislikes;
+                    
+                    // Update button states
+                    const likeBtn = postElement.querySelector('.like-btn');
+                    const dislikeBtn = postElement.querySelector('.dislike-btn');
+                    
+                    if (data.userReaction === 'dislike') {
+                        dislikeBtn.classList.replace('btn-outline-danger', 'btn-danger');
+                        likeBtn.classList.replace('btn-success', 'btn-outline-success');
+                    } else {
+                        dislikeBtn.classList.replace('btn-danger', 'btn-outline-danger');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('You need to login to dislike posts');
+                }
+            });
+        });
+        
+        // Repost functionality
+        document.querySelectorAll('.repost-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const postId = this.dataset.postId;
+                const postElement = document.getElementById(`post-${postId}`);
+                
+                try {
+                    const response = await fetch(`/posts/${postId}/repost`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const data = await response.json();
+                    
+                    // Update UI
+                    postElement.querySelector('.repost-count').textContent = data.repostCount;
+                    
+                    // Toggle button state
+                    const repostBtn = postElement.querySelector('.repost-btn');
+                    if (data.hasReposted) {
+                        repostBtn.classList.replace('btn-outline-primary', 'btn-primary');
+                    } else {
+                        repostBtn.classList.replace('btn-primary', 'btn-outline-primary');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('You need to login to repost');
+                }
+            });
+        });
+    };
+    
+    // Initial load
+    loadTrendingPosts();
+});
+</script>
+<script src="/js/userSession.js"></script>
 <%- include('partials/_footer') %>
