@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const upload = require('../middlware/upload');
 const jwt = require('jsonwebtoken');
 
 router.get('/signup', (req, res) => {
@@ -43,7 +44,7 @@ router.get('/forgot-password', (req, res) => {
 
 router.get('/reset-password/:token', authController.resetPassword);
 
-router.post('/signup', authController.signup);
+router.post('/signup',upload.single('image'),authController.signup);
 router.post('/signin', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.updatePassword);

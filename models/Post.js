@@ -112,12 +112,12 @@ class Post {
     // Repost methods
     static async toggleRepost(postId, userId) {
         // Check if already reposted
-        const existing = await db.query(
+        const [existing] = await db.query(
             'SELECT * FROM post_reposts WHERE post_id = ? AND user_id = ?',
             [postId, userId]
         );
-
-        if (existing.length > 0) {
+    
+        if (existing && existing.length > 0) {
             // Remove repost
             await db.query(
                 'DELETE FROM post_reposts WHERE post_id = ? AND user_id = ?',
@@ -151,33 +151,53 @@ class Post {
     }
 
     // models/Post.js
-static async getTrendingPosts(limit = 10, timePeriod = '24 HOUR') {
-    const query = `
-        SELECT 
-            p.*,
-            COUNT(DISTINCT l.id) AS like_count,
-            COUNT(DISTINCT r.id) AS repost_count,
-            COUNT(DISTINCT l.id) + (COUNT(DISTINCT r.id) * 2) AS engagement_score
-        FROM 
-            posts p
-        LEFT JOIN 
-            post_likes l ON p.id = l.post_id AND l.created_at >= NOW() - INTERVAL ${timePeriod}
-        LEFT JOIN 
-            post_reposts r ON p.id = r.post_id AND r.created_at >= NOW() - INTERVAL ${timePeriod}
-        WHERE 
-            p.created_at >= NOW() - INTERVAL 7 DAY
-        GROUP BY 
-            p.id
-        ORDER BY 
-            engagement_score DESC,
-            like_count DESC,
-            repost_count DESC
-        LIMIT ?
-    `;
+    static async getTrendingPosts(limit = 10, timePeriod = '1 HOUR') {
+        try {
+            // Use a single query with conditional logic
+            const query = `
+                SELECT 
+                    p.*,
+                    COUNT(DISTINCT l.id) AS like_count,
+                    COUNT(DISTINCT dl.id) AS dislike_count,
+                    COUNT(DISTINCT r.id) AS repost_count,
+                    (COUNT(DISTINCT l.id) + (COUNT(DISTINCT r.id) * 2)) AS engagement_score,
+                    CASE 
+                        WHEN p.created_at >= NOW() - INTERVAL ${timePeriod} THEN FALSE
+                        ELSE TRUE
+                    END AS is_fallback
+                FROM 
+                    posts p
+                LEFT JOIN 
+                    post_likes l ON p.id = l.post_id AND l.type = 'like'
+                LEFT JOIN 
+                    post_likes dl ON p.id = dl.post_id AND dl.type = 'dislike'
+                LEFT JOIN 
+                    post_reposts r ON p.id = r.post_id
+                WHERE 
+                    p.created_at >= NOW() - INTERVAL ${timePeriod} OR
+                    NOT EXISTS (
+                        SELECT 1 FROM posts 
+                        WHERE created_at >= NOW() - INTERVAL ${timePeriod}
+                        LIMIT 1
+                    )
+                GROUP BY 
+                    p.id
+                ORDER BY 
+                    is_fallback ASC,  -- Show non-fallback results first
+                    engagement_score DESC
+                LIMIT ${limit}
+            `;
+            
+            const [posts] = await db.query(query);
+            return posts;
+        } catch (error) {
+            console.error('Database error:', error);
+            throw error;
+        }
+    }
     
-    const [posts] = await db.query(query, [limit]);
-    return posts;
-}
+    
+    
 }
 
 module.exports = Post;

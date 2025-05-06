@@ -2,6 +2,9 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const { format } = require('date-fns');
 const { search } = require('../routes/authRoutes');
+const PostLike = require('../models/PostLike');
+const PostRepost = require('../models/PostRepost');
+const db = require('../config/connection');
 
 const PostsController = {
     // Create a new post
@@ -20,9 +23,8 @@ const PostsController = {
     // Get all posts
     async index(req, res) {
         try {
-            console.log("user id ", req.user.userId);
             let posts = await Post.getPostsByUser(req.user.userId);
-            
+            console
             // Get engagement data for each post
             posts = await Promise.all(posts.map(async post => {
                 const reactions = await Post.getReactions(post.id);
@@ -81,7 +83,6 @@ const PostsController = {
     // Delete a post
     async destroy(req, res) {
         try {
-            console.log("post id ;", req.params.id)
             const deletedPost = await Post.deletePost(req.params.id);
             if (!deletedPost) return res.status(404).json({ error: 'Post not found' });
             res.json({ message: 'Post deleted successfully.', post: deletedPost });
@@ -95,7 +96,6 @@ const PostsController = {
 
     async searchPost(req, res) {
         const { query } = req.query;
-        console.log(query)
         try {
             const results = await Post.searchPost(query);
             results.forEach(post => { // Add formatted date to each post
@@ -105,7 +105,7 @@ const PostsController = {
                 title: 'Search Results',
                 posts: results,
                 query: query,
-                user: req.session.user || null
+                user: req.user
             });
         } catch (err) {
             console.log(err);
@@ -117,15 +117,12 @@ const PostsController = {
             const { postId } = req.params;
             const userId = req.user.userId; // From JWT
             const { type } = req.body; // 'like' or 'dislike'
-            console.log("post id ", postId, "user id ", userId, "type ", type);
             if (!['like', 'dislike'].includes(type)) {
                 return res.status(400).json({ error: 'Invalid reaction type' });
             }
 
             const result = await Post.toggleLike(postId, userId, type);
             const reactions = await Post.getReactions(postId);
-            console.log("result", result);
-            console.log("reactions", reactions);
 
             res.json({
                 ...result,
@@ -142,55 +139,112 @@ const PostsController = {
         try {
             const { postId } = req.params;
             const userId = req.user.userId;
-console.log("post id ", postId, "user id ", userId);
+            
+            console.log("Starting repost - Post ID:", postId, "User ID:", userId);
+            
+            // Verify the post exists first
+            const [post] = await db.query('SELECT id FROM posts WHERE id = ?', [postId]);
+            if (!post || post.length === 0) {
+                return res.status(404).json({ error: 'Post not found' });
+            }
+    
             const result = await Post.toggleRepost(postId, userId);
             const repostCount = await Post.getRepostCount(postId);
-console.log("result", result);
-console.log("repostCount", repostCount);
+            const hasReposted = await Post.hasReposted(postId, userId);            
             res.json({
                 ...result,
                 repostCount,
-                hasReposted: await Post.hasReposted(postId, userId)
+                hasReposted
             });
         } catch (error) {
-            console.error(error);
+            console.error("Error in repostPost:", error);
             res.status(500).json({ error: 'Failed to process repost' });
         }
     },
 
-    // controllers/postsController.js
-    async getTrendingPosts(req, res) {
-        try {
-            // Optional query parameters
-            const limit = parseInt(req.query.limit) || 10;
-            const timePeriod = req.query.period || '24 HOUR'; // Can be '1 HOUR', '24 HOUR', '7 DAY'
-            console.log("timePeriod", timePeriod);
-            console.log("limit", limit);
-
-            // Get trending posts with some randomness
-            const trendingPosts = await Post.getTrendingPosts(limit, timePeriod);
-            console.log("trendingPosts", trendingPosts);
-            // Add some randomness to prevent always showing exact same ranking
-            const shuffled = trendingPosts
-                .map(post => ({ post, sort: Math.random() }))
-                .sort((a, b) => b.post.engagement_score - a.post.engagement_score || b.sort - a.sort)
-                .map(({ post }) => post);
-
-            // Get user data for each post
-            const postsWithUsers = await Promise.all(
-                shuffled.map(async post => {
-                    const user = await User.findById(post.user_id);
-                    return { ...post, user };
-                })
-            );
-
-            res.json(postsWithUsers);
-        } catch (error) {
-            console.error('Error fetching trending posts:', error);
-            res.status(500).json({ error: 'Failed to fetch trending posts' });
+    // In your postsController.js
+async getTrendingPosts(req, res) {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const timePeriod = req.query.period || '24 HOUR';
+        
+        // Get trending posts with optimized query
+        const trendingPosts = await Post.getTrendingPosts(limit, timePeriod);
+        
+        // Get all needed user IDs at once
+        const userIds = [...new Set(trendingPosts.map(post => post.user_id))];
+        const users = await User.findAll({ where: { id: userIds } });
+        const userMap = new Map(users.map(user => [user.id, user]));
+        
+        // Get user reactions in bulk if logged in
+        let userReactions = new Map();
+        let userReposts = new Set();
+        
+        if (req.user) {
+            const reactions = await PostLike.findAll({
+                where: {
+                    post_id: trendingPosts.map(post => post.id),
+                    user_id: req.user.id
+                }
+            });
+            reactions.forEach(r => userReactions.set(r.post_id, r.type));
+            
+            const reposts = await PostRepost.findAll({
+                where: {
+                    post_id: trendingPosts.map(post => post.id),
+                    user_id: req.user.id
+                }
+            });
+            reposts.forEach(r => userReposts.add(r.post_id));
         }
+        
+       // Build response
+const response = trendingPosts.map(post => ({
+    ...post,
+    user: userMap.get(post.user_id),
+    userReaction: userReactions.get(post.id) || null,
+    hasReposted: userReposts.has(post.id),
+    isFallbackResults: post.is_fallback,
+    created_at: formatRelativeTime(post.created_at) // Add this line
+}));
+        
+        res.json(response);
+    } catch (error) {
+        console.error('Error fetching trending posts:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch trending posts',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
+}
 
+}
+
+// Add this helper function (you can put it in a utilities file)
+function formatRelativeTime(dateString) {
+    const now = new Date();
+    const postDate = new Date(dateString);
+    const seconds = Math.floor((now - postDate) / 1000);
+    
+    if (seconds < 60) {
+        return `${seconds}s ago`;
+    }
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) {
+        return `${minutes}min ago`;
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+        return `${hours}h ago`;
+    }
+    
+    // For dates older than 24 hours, show the day and month
+    return postDate.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short'
+    });
 }
 
 module.exports = PostsController;

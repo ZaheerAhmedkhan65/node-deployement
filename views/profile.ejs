@@ -1,0 +1,83 @@
+<%- include('partials/_header') %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="card-title">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="position-relative border border-1">
+                        <div id="image-preview">
+                            <img src="<%= user.avatar || '/images/default-avatar.png' %>" class="rounded-circle" alt="<%= user.name %>" style="width: 120px; height: 120px; object-fit: cover;">
+                        </div>
+                        <% if (user.id === userId) {%>
+                        <form id="update-avatar-form" style="bottom: 0px;right: 0px;" class="position-absolute" action="/users/<%= user.id %>/avatar/update" method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                              <div id="upload-area">
+                                <span id="plus-icon" style="font-size: 1rem; color: #888;">Edit</span>
+                              </div>
+                              <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-3">Update</button>
+                          </form>
+                        <%}%>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <h3><%= user.name %></h3>
+                        <p><%= user.email %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/userSession.js"></script>
+<script>
+  const uploadArea = document.getElementById('upload-area');
+  const fileInput = document.getElementById('image');
+  const plusIcon = document.getElementById('plus-icon');
+  const updateAvatarForm = document.getElementById('update-avatar-form');
+
+  uploadArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', (event) => {
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = document.createElement('img');
+        img.src = event.target.result;
+        img.classList.add('m-2');
+        img.style.height = '100px';
+        img.style.objectFit = 'cover';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  updateAvatarForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    fetch(updateAvatarForm.action, {
+      method: 'POST',
+      body: new FormData(updateAvatarForm),
+      credentials: 'include'
+    }).then(response => {
+      if (!response.ok) {
+        window.location.href = '/auth/login';
+      }
+    }).then(() => {
+      window.location.reload();
+    });
+
+  })
+</script>
+
+<%- include('partials/_footer') %>

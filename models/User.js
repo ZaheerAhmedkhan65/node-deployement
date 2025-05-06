@@ -20,6 +20,12 @@ class User {
         return users;
     }
 
+    static async findAll({ where }) {
+        let query = 'SELECT * FROM users WHERE id IN (' + where.id.map(() => '?').join(', ') + ')';
+        const [rows] = await db.execute(query, where.id);
+        return rows;
+      }
+
     static async findUser(username){
         const [user] = await db.query('SELECT * FROM users WHERE name = ? OR email = ?', [username,username]);
         return user[0];
@@ -71,6 +77,14 @@ class User {
     static async findByUsername(name) {
         const [rows] = await db.query('SELECT * FROM users WHERE name = ?', [name]);
         return rows[0];
+    }
+
+    static async updateAvatar(id, avatar, avatar_public_id) {
+        const [result] = await db.query(
+            'UPDATE users SET avatar = ?, avatar_public_id = ? WHERE id = ?',
+            [avatar, avatar_public_id, id]
+        );
+        return result;
     }
 }
 

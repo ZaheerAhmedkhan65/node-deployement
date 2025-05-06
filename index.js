@@ -6,6 +6,8 @@ const cors = require('cors');
 const { format } = require('date-fns');
 const authRoutes = require("./routes/authRoutes")
 const postsRoutes = require("./routes/postsRoutes")
+const userRoutes = require("./routes/userRoutes")
+const multer = require('multer');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
@@ -39,6 +41,7 @@ app.get('/', (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);
+app.use("/users",userRoutes);
 
 app.listen(port, () => {
     console.log(`Server running on localhost:${port}`);

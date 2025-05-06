@@ -16,6 +16,8 @@ const transporter = nodemailer.createTransport({
 
 const signup = async (req, res) => {
     const { name,email, password } = req.body;
+    let imagePath = null;
+    let filename = null;
     
     // Check if user already exists
     const existingUser = await User.findUser(name);
@@ -26,8 +28,13 @@ const signup = async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    if (req.file) {
+        imagePath = req.file.path;
+        filename = req.file.filename;
+    }
+
     // Create the user
-    await User.createUser(name, email,hashedPassword);
+    await User.createUser(name, email,hashedPassword, imagePath, filename);
 
     res.status(201).redirect('/auth/signin');
 }
