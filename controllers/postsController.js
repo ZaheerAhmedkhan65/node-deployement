@@ -21,10 +21,10 @@ const PostsController = {
     },
 
     // Get all posts
-    async index(req, res) {
+    async getAllUserPosts(req, res) {
         try {
-            let posts = await Post.getPostsByUser(req.user.userId);
-            console
+            let posts = await Post.getPostsByUser(req.params.id);
+            
             // Get engagement data for each post
             posts = await Promise.all(posts.map(async post => {
                 const reactions = await Post.getReactions(post.id);
@@ -34,7 +34,13 @@ const PostsController = {
                 
                 return {
                     ...post,
-                    published_at: post.published_at ? format(new Date(post.published_at), 'dd-MM-yyyy') : 'Not Published',
+                    user: {
+                        id: post.user_id, // or req.params.id
+                        name: post.name,  // from the joined user table
+                        avatar: post.avatar // from the joined user table
+                    },
+                    published_at: post.published_at ? formatRelativeTime(post.published_at) : null,
+                    created_at: formatRelativeTime(post.created_at),
                     likes: reactions.likes,
                     dislikes: reactions.dislikes,
                     reposts: repostCount,
@@ -43,12 +49,7 @@ const PostsController = {
                 };
             }));
             
-            res.render("posts", { 
-                posts, 
-                title: 'posts', 
-                userId: req.user.userId, 
-                user: req.user 
-            });
+            res.json(posts);
         } catch (error) {
             console.error('Error fetching posts:', error);
             res.status(500).json({ error: 'Internal Server Error' });

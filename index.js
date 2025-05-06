@@ -9,7 +9,7 @@ const postsRoutes = require("./routes/postsRoutes")
 const userRoutes = require("./routes/userRoutes")
 const multer = require('multer');
 const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
+const authenticate = require('./middlware/authenticate');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -20,24 +20,16 @@ app.use(cors());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => {
-    if (req.cookies.token) {
-        const token = req.cookies.token;
-        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-            if (err) {
-                return res.status(401).redirect('/auth/signin');
-            }
-            let user = decoded;
-            console.log(user.userId);
-            return res.render('index', { title: 'Blog', user });
-        });
-    } else {
-        console.log("no token");
-        return res.render('index', { title: 'Blog', user: null });
+
+app.get('/',authenticate, async (req, res) => {
+    try {
+        const user = req.user;
+        return res.render('index', { title: 'Blog', user, userId: req.user.userId });
+    } catch (error) {
+        console.error(error);
+        return res.status(401).redirect('/auth/signin');
     }
 });
-
-
 
 app.use("/auth", authRoutes);
 app.use("/posts", postsRoutes);

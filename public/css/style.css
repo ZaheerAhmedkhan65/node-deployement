@@ -4,7 +4,7 @@ body{
 }
 
 .main-feed{
-    height: calc(100vh - 60px);
+    height: 100vh;
     overflow-y: auto;
 }
 .notification {
@@ -79,10 +79,18 @@ body{
     color: white;
 }
 
-footer{
-    text-align: center;
-    padding: 20px;
-    background-color: black;
+
+.current-user-profile{
+    display: flex;
+    align-items: start;
+    gap: 5px;
+}
+
+.current-user-profile div h3{
+    font-size: 18px;
+}
+.current-user-profile div p{
+    font-size: 12px;
 }
 
 
@@ -94,16 +102,56 @@ footer{
     transition: 0.3s ease all;
 }
 
+#update-avatar-form{
+    bottom: 10px;
+    right: 5px;
+    background-color: #333;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 @media (max-width: 762px) {
+    #image-preview img{
+        width: 60px !important;
+        height: 60px !important;
+    }
+    
+#update-avatar-form{
+    bottom: 5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+}
     .time-filter{
         font-size: 12px !important;
         font-weight: bold !important;
     }
 
+    .user-name{
+        font-size: 18px !important;
+        font-weight: bold;
+        width: 150px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .user-email{
+        font-size: 12px !important;
+        width: 150px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     .post-author-name{
         font-size: 14px !important;
-        font-weight: bold;
         width: 100px;
+        font-weight: bold;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;

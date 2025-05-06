@@ -1,71 +1,124 @@
 <%- include('partials/_header') %>
+<div class="row">
+  <!-- Left Sidebar -->
+  <%- include('partials/_sidebar') %>
 
-<div class="row justify-content-center">
-  <div class="col-lg-6">
+  <!-- Main Content -->
+  <div class="col-lg-6 col-md-11 col-10 main-feed py-3">
     <div class="card">
-        <div class="card-body">
-            <div class="card-title">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="position-relative border border-1">
-                        <div id="image-preview">
-                            <img src="<%= user.avatar || '/images/default-avatar.png' %>" class="rounded-circle" alt="<%= user.name %>" style="width: 120px; height: 120px; object-fit: cover;">
-                        </div>
-                        <% if (user.id === userId) {%>
-                        <form id="update-avatar-form" style="bottom: 0px;right: 0px;" class="position-absolute" action="/users/<%= user.id %>/avatar/update" method="POST" enctype="multipart/form-data">
-                            <div class="form-group">
-                              <div id="upload-area">
-                                <span id="plus-icon" style="font-size: 1rem; color: #888;">Edit</span>
-                              </div>
-                              <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+      <div class="card-body">
+          <div class="card-title">
+              <div class="d-flex align-items-start gap-2">
+                  <div class="position-relative d-flex align-items-center justify-content-center border border-2 border-primary rounded-circle">
+                      <div id="image-preview">
+                          <img src="<%= userData.avatar || '/images/default-avatar.png' %>" class="rounded-circle" alt="<%= userData.name %>" style="width: 120px; height: 120px; object-fit: cover;">
+                      </div>
+                      <% if (userData.id === userId) {%>
+                      <form id="update-avatar-form" class="position-absolute" action="/users/<%= userData.id %>/avatar/update" method="POST" enctype="multipart/form-data">
+                          <div class="form-group">
+                            <div id="upload-area">
+                              <span id="plus-icon" style="font-size: 1rem; color: #888;">
+                                <i class="bi bi-pencil"></i>                              </span>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-3">Update</button>
-                          </form>
-                        <%}%>
+                            <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+                          </div>
+                        </form>
+                      <%}%>
+                  </div>
+                  <div class="d-flex flex-column">
+                      <h3 class="m-0 user-name"><%= userData.name %></h3>
+                      <p class="m-0 user-email"><%= userData.email %></p>
+                  </div>
+                  <% if (userData.id === userId) {%>
+                  <div class="actions d-lg-none d-inline">
+                      <div class="btn-group dropup">
+                          <button type="button" class="border-0 p-0 bg-transparent" data-bs-toggle="dropdown" aria-expanded="false">
+                              <i class="bi bi-three-dots-vertical"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <a href="/auth/logout" class="dropdown-item">Logout</a>
+                          </ul>
+                        </div>
+                  </div>
+                  <%}%>
+              </div>
+          </div>
+      </div>
+  </div>
+    <div class="card border-0 m-0 p-0">
+      <div class="card-body m-0 p-0">
+        <h1>Posts</h1>
+        <div class="posts-container">
+          <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suggested Column -->
+  <%- include('partials/_suggested') %>
+</div>
+
+
+<div class="modal fade" id="editPostModal" tabindex="-1" aria-labelledby="editPostModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editPostModalLabel">Edit Post</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="d-flex flex-column">
-                        <h3><%= user.name %></h3>
-                        <p><%= user.email %></p>
+                    <div class="modal-body">
+                        <form id="edit-post-form">
+                            <input type="hidden" id="edit-post-id">
+                            <div class="mb-3">
+                                <label for="edit-title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="edit-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-content" class="form-label">Content</label>
+                                <textarea class="form-control" id="edit-content" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-published_at" class="form-label">Publish Date</label>
+                                <input type="date" class="form-control" id="edit-published_at">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-  </div>
-</div>
+
 
 <script src="/js/userSession.js"></script>
+<script src="/js/setupPostReactionBtn.js"></script>
+<script src="/js/editPost.js"></script>
+<script src="/js/deletePost.js"></script>
 <script>
   const uploadArea = document.getElementById('upload-area');
   const fileInput = document.getElementById('image');
   const plusIcon = document.getElementById('plus-icon');
   const updateAvatarForm = document.getElementById('update-avatar-form');
 
+  if(uploadArea && fileInput && plusIcon){
   uploadArea.addEventListener('click', () => {
     fileInput.click();
   });
 
+  
   fileInput.addEventListener('change', (event) => {
     const preview = document.getElementById('image-preview');
-    preview.innerHTML = '';
-
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = document.createElement('img');
-        img.src = event.target.result;
-        img.classList.add('m-2');
-        img.style.height = '100px';
-        img.style.objectFit = 'cover';
-        preview.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  updateAvatarForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    fetch(updateAvatarForm.action, {
+      fetch(updateAvatarForm.action, {
       method: 'POST',
       body: new FormData(updateAvatarForm),
       credentials: 'include'
@@ -76,8 +129,156 @@
     }).then(() => {
       window.location.reload();
     });
+    }
+  });
+  }
+</script>
+<script src="/js/showNotification.js"></script>
 
-  })
+<script>
+  const userDataId = "<%= userData.id %>";
+  const userId = "<%= userId %>";
+  console.log(userId);
+  const postsContainer = document.querySelector('.posts-container');
+  const timeFilters = document.querySelectorAll('.time-filter');
+  
+  // Cache for already loaded posts
+  const postsCache = new Map();
+
+  // Function to load posts
+  const loadUserPosts = async (period = '1 HOUR') => {
+    try {
+      // Show cached content immediately if available
+      if (postsCache.has(period)) {
+        postsContainer.innerHTML = postsCache.get(period);
+        setupReactionButtons();
+        return;
+      }
+      
+      // Show loading state
+      postsContainer.innerHTML = `
+        <div class="text-center my-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      `;
+      
+      // Fetch data with cache-busting
+      const response = await fetch(`/posts/users/${userDataId}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      const posts = await response.json();
+      
+      if (!posts || !Array.isArray(posts)) {
+        throw new Error('Invalid posts data received');
+      }
+
+      // Cache the loaded posts
+      postsCache.set(period, postsContainer.innerHTML);
+
+      // Clear previous posts
+      postsContainer.innerHTML = '';
+
+      // Add new posts to the container
+      posts.forEach((post) => {
+        const postElement = createPostElement(post);
+        postsContainer.appendChild(postElement);
+      });
+
+      setupReactionButtons();
+    } catch (error) {
+      console.error('Error:', error);
+      postsContainer.innerHTML = `<p class="text-danger">Error loading posts: ${error.message}</p>`;
+    }
+  };
+
+  // Initial load
+  loadUserPosts();
+  
+  function createPostElement(post) {
+    console.log(post);
+    const postElement = document.createElement('div');
+    postElement.classList.add('card', 'mb-3', 'post-card');
+    postElement.id = `post-${post.id}`;
+    postElement.innerHTML = `
+            <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <a href="/users/${post.user.id}/profile" class="text-decoration-none">
+                        <img src="${post.user.avatar || '/images/default-avatar.png'}" 
+                             alt="${post.user.name}" 
+                             class="rounded-circle me-2 border border-2 border-primary"
+                             width="40" 
+                             height="40"
+                             loading="lazy">
+                        </a>
+                        <h5 class="mb-auto post-author-name">${post.user.name}</h5>
+                    </div>
+                    <div class="text-muted small mb-3 d-flex gap-2">
+                        ${post.created_at}
+                        <span class="post-status">
+                          ${post.published_at ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>'}
+                        </span>
+                         <div class="dropdown">
+                    <button class="border-0 bg-transparent p-0 " type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                         ${post.user.id == userId ? `
+                         <li class="dropdown-item">
+                         <button id="edit-post-btn-${post.id}" class="btn btn-sm btn-info edit-post-btn" 
+                            data-bs-toggle="modal" data-bs-target="#editPostModal" 
+                            data-id="${post.id}"
+                            data-title="${post.title}" 
+                            data-content="${post.content}"
+                            data-published_at="${post.published_at}">
+                            Edit
+                          </button>
+                        </li>
+                        
+                        <li class="dropdown-item">
+                          <button type="button" data-post-id="${post.id}" 
+                                class="btn btn-sm btn-danger delete-post-btn">
+                            Delete
+                          </button>
+                        </li>
+                        ` : ''}
+                    </ul>
+                </div> 
+                    </div>
+                </div>     
+                <h5 class="card-title post-title" style="margin: 0px 0px 0px 45px;">${post.title}</h5>
+                <p class="card-text post-content" style="margin: 0px 0px 0px 45px;">${post.content}</p>
+                <div style="margin:15px 0px -15px 45px;" class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group reaction-buttons">
+                        <button class="btn btn-sm ${post.userReaction === 'like' ? 'btn-success' : 'btn-outline-success'} like-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-hand-thumbs-up"></i> <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        <button class="btn btn-sm ${post.userReaction === 'dislike' ? 'btn-danger' : 'btn-outline-danger'} dislike-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-hand-thumbs-down"></i> <span class="dislike-count">${post.dislikes || 0}</span>
+                        </button>
+                        <button class="btn btn-sm ${post.hasReposted ? 'btn-primary' : 'btn-outline-primary'} repost-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-arrow-repeat"></i> <span class="repost-count">${post.reposts || 0}</span>
+                        </button>
+                    </div>
+                    <span class="badge bg-secondary">
+                        🔥 ${Math.round(post.engagement_score || 0)}
+                    </span>
+                </div>
+            </div>
+    `;
+    return postElement;
+  }
+
 </script>
 
 <%- include('partials/_footer') %>

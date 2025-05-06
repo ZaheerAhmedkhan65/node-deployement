@@ -24,8 +24,14 @@ class Post {
     }
 
     // Get all posts by a specific user
-    static async getPostsByUser(user_id) {
-        const [posts] = await db.query('SELECT * FROM posts WHERE user_id = ?', [user_id]);
+    static async getPostsByUser(userId) {
+        const [posts] = await db.query(`
+            SELECT p.*, u.name, u.avatar 
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.user_id = ?
+            ORDER BY p.created_at DESC
+        `, [userId]);
         return posts;
     }
 

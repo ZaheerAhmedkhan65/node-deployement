@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedTitle = document.getElementById('edit-title').value;
         const updatedContent = document.getElementById('edit-content').value;
         const updatedPublishedAt = document.getElementById('edit-published_at').value;
-
+console.log(updatedPublishedAt);
         try {
             const response = await fetch(`/posts/${postId}/update`, {
                 method: 'PUT',
@@ -40,10 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const responseData = await response.json();  // Ensure we get the correct structure
                 const updatedPost = responseData.updatedPost;  // Access updatedPost
                 // Update the post in the DOM
+                console.log(updatedPost.published_at);
                 const postElement = document.getElementById(`post-${updatedPost.id}`);
-                postElement.querySelector('.text-decoration-none').textContent = updatedPost.title;
-                postElement.querySelector('.text-muted.mx-2').textContent = updatedPost.published_at;
-                postElement.querySelector('.text-muted').textContent = updatedPost.content;
+                postElement.querySelector('.post-title').textContent = updatedPost.title;
+                postElement.querySelector('.post-status').innerHTML = updatedPost.published_at  ?  `<span class="badge bg-success">Published</span>` : `<span class="badge bg-secondary">Draft</span>`;
+                postElement.querySelector('.post-content').textContent = updatedPost.content;
                 // Hide the modal
                 const bootstrapModal = bootstrap.Modal.getInstance(editPostModal);
                 bootstrapModal.hide();

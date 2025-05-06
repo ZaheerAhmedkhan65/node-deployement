@@ -4,11 +4,10 @@ const User = require('../models/User');
 const userController = {
     // Create a new post
     async profile(req, res) {
-            const userId = req.params.id;
         try {
-            const user = await User.findById(userId);
-            console.log(user);
-            res.status(201).render("profile",{ user, message: "Post created successfully", title: "profile",userId: req.user.userId });
+            const userData = await User.findById(req.params.id);
+            console.log(userData);
+            res.status(201).render("profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
         } catch (error) {
             console.error('Error creating post:', error);
             res.status(500).json({ error: 'Internal Server Error' });

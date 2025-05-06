@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const postsContainer = document.querySelector("#posts-container");
+    const postsContainer = document.querySelector(".posts-container");
     const newPostModal = document.getElementById("newPostModal");
     document.querySelector("#create-post-form").addEventListener("submit", async (event) => {
         event.preventDefault();

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Select the parent container that holds all post elements
-    const postsContainer = document.getElementById('posts-container');  // Make sure this is the correct container
+    const postsContainer = document.querySelector('.posts-container');  // Make sure this is the correct container
 
     // Add event listener to the parent container
     postsContainer.addEventListener('click', async (event) => {

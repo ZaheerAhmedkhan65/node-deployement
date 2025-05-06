@@ -1,28 +1,7 @@
 <%- include('partials/_header') %>
 <div class="row">
   <!-- Left Sidebar -->
-  <div class="col-lg-3 col-md-1 col-2 sidebar d-flex flex-column align-items-center align-items-lg-start py-3">
-    <a class="text-decoration-none d-none d-lg-block" href="/">
-      <h3>Blog</h3>
-    </a>
-    <div class="links-container nav flex-column">
-        <a class="text-decoration-none d-lg-none d-block" href="/">
-            <h3>Blog</h3>
-        </a>
-        <a href="/posts" class="nav-link text-center text-lg-start">
-          <i class="bi bi-file-earmark-text"></i>
-          <span class="d-none d-lg-inline"> Posts</span>
-        </a>
-        <a href="/followers" class="nav-link text-center text-lg-start">
-          <i class="bi bi-people"></i>
-          <span class="d-none d-lg-inline"> Followers</span>
-        </a>
-        <a href="/notification" class="nav-link text-center text-lg-start">
-          <i class="bi bi-bell"></i>
-          <span class="d-none d-lg-inline"> Notifications</span>
-        </a>
-    </div>
-  </div>
+  <%- include('partials/_sidebar') %>
 
   <!-- Main Content -->
   <div class="col-lg-6 col-md-11 col-10 main-feed">
@@ -46,11 +25,9 @@
   </div>
 
   <!-- Suggested Column -->
-  <div class="col-lg-3 d-none d-lg-block">
-    <h3>Suggested</h3>
-  </div>
+  <%- include('partials/_suggested') %>
 </div>
-
+<script src="/js/setupPostReactionBtn.js"></script>
 <script src="/js/index.js"></script>
 <script src="/js/userSession.js"></script>
 <%- include('partials/_footer') %>
