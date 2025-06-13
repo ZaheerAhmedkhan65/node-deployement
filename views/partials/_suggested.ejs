@@ -1,3 +1,198 @@
 <div class="col-lg-3 d-none d-lg-block">
-    <h3>Suggested</h3>
+  <div class="card sticky-top" style="top: 20px;">
+    <div class="card-body">
+      <h3 class="card-title">Suggested Users</h3>
+      <ul class="suggested-users-container list-group list-group-flush">
+        <div class="text-center my-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </ul>
+    </div>
   </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const suggestedUsersContainer = document.querySelector('.suggested-users-container');
+    const currentUserId = document.body.dataset.userId; // Assuming you set this in your template
+    
+    // Cache for already loaded users
+    const usersCache = new Map();
+    
+    const loadSuggestedUsers = async () => {
+      try {
+        // Show loading state
+        suggestedUsersContainer.innerHTML = `
+          <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        `;
+        
+        // Fetch data
+        const response = await fetch('/users/suggested_user', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+        
+        const users = await response.json();
+        
+        if (!users || !Array.isArray(users)) {
+          throw new Error('Invalid users data received');
+        }
+        
+        // Filter out current user if present
+        const filteredUsers = users.filter(user => user.id !== parseInt(currentUserId));
+        
+        // Update the DOM with the loaded users
+        suggestedUsersContainer.innerHTML = '';
+
+        if (filteredUsers.length === 0) {
+          suggestedUsersContainer.innerHTML = `
+            <li class="list-group-item text-center text-muted">
+              No suggestions available
+            </li>
+          `;
+          return;
+        }
+
+        filteredUsers.forEach(user => {
+          createUserCard(user);
+        });
+
+      } catch (error) {
+        console.error('Error getting suggested users:', error);
+        suggestedUsersContainer.innerHTML = `
+          <li class="list-group-item text-center text-danger">
+            Failed to load suggestions. <button class="btn btn-link p-0" onclick="loadSuggestedUsers()">Try again</button>
+          </li>
+        `;
+      }
+    };
+    
+    const createUserCard = (user) => {
+      const userElement = document.createElement('li');
+      userElement.classList.add('list-group-item');
+      userElement.dataset.userId = user.id;
+      
+      const isFollowing = user.isFollowing || false;
+      
+      userElement.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between">
+          <a href="/users/${user.id}/profile" class="text-decoration-none d-flex align-items-center flex-grow-1">
+            <img src="${user.avatar || '/images/default-avatar.png'}" 
+                 alt="${user.name}" 
+                 class="rounded-circle me-2 border border-2 ${isFollowing ? 'border-success' : 'border-primary'}" 
+                 width="50" 
+                 height="50" 
+                 loading="lazy"
+                 onerror="this.src='/images/default-avatar.png'">
+            <div class="d-flex flex-column">
+              <h6 class="card-title m-0 text-truncate" style="max-width: 120px">${user.name}</h6>
+              <small class="text-muted text-truncate" style="max-width: 120px">@${user.username || user.email.split('@')[0]}</small>
+            </div>
+          </a>
+          <button class="btn ${isFollowing ? 'btn-outline-success' : 'btn-primary'} rounded-pill follow-btn" 
+                  data-user-id="${user.id}"
+                  style="min-width: 80px">
+            ${isFollowing ? 'Following' : 'Follow'}
+          </button>
+        </div>
+      `;
+      
+      suggestedUsersContainer.appendChild(userElement);
+    };
+    
+    // Handle follow/unfollow actions
+    document.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('follow-btn')) {
+        const btn = e.target;
+        const userId = btn.dataset.userId;
+        const isFollowing = btn.classList.contains('btn-outline-success');
+        
+        try {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+          
+          const response = await fetch(`/users/${userId}/follow`, {
+            method: isFollowing ? 'DELETE' : 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          // Update button state
+          if (isFollowing) {
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-primary');
+            btn.textContent = 'Follow';
+          } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-success');
+            btn.textContent = 'Following';
+          }
+          
+          // Update avatar border
+          const avatar = btn.closest('.list-group-item').querySelector('img');
+          if (avatar) {
+            avatar.classList.toggle('border-primary');
+            avatar.classList.toggle('border-success');
+          }
+          
+          // Show notification
+          showNotification(data.message || (isFollowing ? 'Unfollowed successfully' : 'Followed successfully'), 'success');
+          
+        } catch (error) {
+          console.error('Follow action failed:', error);
+          showNotification('Action failed. Please try again.', 'danger');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    });
+    
+    // Helper function to show notifications
+    const showNotification = (message, type = 'info') => {
+      // Implement your notification system here
+      console.log(`${type}: ${message}`);
+      // Example: Toast notification
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.setAttribute('aria-atomic', 'true');
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    };
+    
+    // Initial load
+    loadSuggestedUsers();
+    
+    // Refresh every 5 minutes
+    setInterval(loadSuggestedUsers, 300000);
+  });
+</script>

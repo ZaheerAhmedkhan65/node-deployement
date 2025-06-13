@@ -11,14 +11,20 @@
                 <i class="bi bi-file-earmark-text"></i>
                 <span class="d-none d-lg-inline"> Posts</span>
               </a>
-              <a href="#followers" class="nav-link text-center text-lg-start">
-                <i class="bi bi-people"></i>
-                <span class="d-none d-lg-inline"> Followers</span>
-              </a>
-              <a href="#notification" class="nav-link text-center text-lg-start">
-                <i class="bi bi-bell"></i>
-                <span class="d-none d-lg-inline"> Notifications</span>
-              </a>
+
+              <button type="button" class="nav-link text-center text-lg-start p-0" data-bs-toggle="modal" data-bs-target="#followersModal">
+                <a  href="#followers" class="nav-link text-center text-lg-start">
+                  <i class="bi bi-people"></i>
+                  <span class="d-none d-lg-inline"> Followers</span>
+                </a>
+              </button>
+              <button type="button" class="nav-link text-center text-lg-start p-0" data-bs-toggle="modal" data-bs-target="#notificationsModal">
+                <a href="#notification" class="nav-link text-center text-lg-start">
+                  <i class="bi bi-bell"></i>
+                  <span class="d-none d-lg-inline"> Notifications</span>
+                </a>
+              </button>
+
               <a href="#settings" class="nav-link text-center text-lg-start">
                 <i class="bi bi-gear"></i>
                 <span class="d-none d-lg-inline"> Settings</span>
@@ -85,5 +91,10 @@
       </div>
   </div>
 </div>
+
+
+
+<%- include('_followers') %>
+<%- include('_notifications') %>
 
 <script src="/js/createPost.js"></script>
