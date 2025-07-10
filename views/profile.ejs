@@ -8,7 +8,7 @@
     <div class="card">
       <div class="card-body">
           <div class="card-title">
-              <div class="d-flex align-items-start gap-2">
+              <div class="d-flex align-items-center gap-2">
                   <div class="position-relative d-flex align-items-center justify-content-center border border-2 border-primary rounded-circle">
                       <div id="image-preview">
                           <img src="<%= userData.avatar || '/images/default-avatar.png' %>" class="rounded-circle" alt="<%= userData.name %>" style="width: 120px; height: 120px; object-fit: cover;">
@@ -28,6 +28,14 @@
                   <div class="d-flex flex-column">
                       <h3 class="m-0 user-name"><%= userData.name %></h3>
                       <p class="m-0 user-email"><%= userData.email %></p>
+                      <p class="m-0 user-join-date">
+                        <span class="me-2">
+                          <i class="bi bi-calendar-event"></i>
+                          Joined
+                        </span>
+                        <%= userData.created_at %>
+                      </p>
+                      <p class="m-0 user-posts"><%= userData.posts %> posts</p>
                   </div>
                   <% if (userData.id === userId) {%>
                   <div class="actions d-lg-none d-inline">
@@ -41,6 +49,16 @@
                         </div>
                   </div>
                   <%}%>
+              </div>
+              <div class="d-flex gap-2">
+                <p class="">
+                  <span class="text-dark fw-bold"><%= userData.following_count %></span>
+                  <span class="text-muted"> Following</span>
+                </p>
+                <p class="">
+                  <span class="text-dark fw-bold"><%= userData.followers_count %></span>
+                  <span class="text-muted"> Followers</span>
+                </p>
               </div>
           </div>
       </div>
@@ -124,7 +142,7 @@
       credentials: 'include'
     }).then(response => {
       if (!response.ok) {
-        window.location.href = '/auth/login';
+        window.location.href = '/auth/signin';
       }
     }).then(() => {
       window.location.reload();
@@ -136,6 +154,7 @@
 <script src="/js/showNotification.js"></script>
 
 <script>
+  const userName = "<%= userData.name %>";
   const userDataId = "<%= userData.id %>";
   const userId = "<%= userId %>";
   console.log(userId);
@@ -184,14 +203,19 @@
 
       // Clear previous posts
       postsContainer.innerHTML = '';
-
-      // Add new posts to the container
+      if(posts.length == 0){
+        postsContainer.innerHTML = `<p class="text-dark">No posts created by <a href="/users/${userDataId}/profile" class="badge bg-primary-subtle text-dark fw-bold text-decoration-none">@${userName}</a> yet.</p>`;
+      }else{
+ // Add new posts to the container
       posts.forEach((post) => {
         const postElement = createPostElement(post);
         postsContainer.appendChild(postElement);
       });
 
       setupReactionButtons();
+      }
+
+     
     } catch (error) {
       console.error('Error:', error);
       postsContainer.innerHTML = `<p class="text-danger">Error loading posts: ${error.message}</p>`;
@@ -202,7 +226,10 @@
   loadUserPosts();
   
   function createPostElement(post) {
-    console.log(post);
+    // Skip rendering draft posts if the visitor is not the owner
+    if (!post.published_at && post.user.id != userId) {
+        return document.createElement('div'); // Return empty div that won't be displayed
+    }
     const postElement = document.createElement('div');
     postElement.classList.add('card', 'mb-3', 'post-card');
     postElement.id = `post-${post.id}`;
@@ -222,9 +249,11 @@
                     </div>
                     <div class="text-muted small mb-3 d-flex gap-2">
                         ${post.created_at}
+                        ${post.user.id  == userId ? `
                         <span class="post-status">
                           ${post.published_at ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>'}
                         </span>
+                        ` : ''}
                          <div class="dropdown">
                     <button class="border-0 bg-transparent p-0 " type="button" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="bi bi-three-dots"></i>

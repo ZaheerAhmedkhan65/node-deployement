@@ -5,7 +5,7 @@ setInterval(() => {
         credentials: 'include'
     }).then(response => {
         if (!response.ok) {
-            window.location.href = '/auth/login';
+            window.location.href = '/auth/signin';
         }
     });
 }, 15 * 60 * 1000); // 15 minutes

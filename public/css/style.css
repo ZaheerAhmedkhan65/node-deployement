@@ -114,6 +114,14 @@ body{
     justify-content: center;
 }
 
+.user-join-date{
+    font-size: 14px;
+}
+
+.user-posts{
+    font-size: 14px;;
+}
+
 @media (max-width: 762px) {
     #image-preview img{
         width: 60px !important;
@@ -146,6 +154,14 @@ body{
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    .user-join-date{
+        font-size: 12px !important;
+    }
+
+    .user-posts{
+        font-size: 12px !important;
     }
 
     .post-author-name{

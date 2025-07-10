@@ -16,11 +16,6 @@ class Follower {
         return follow[0]; // Return deleted follow data if needed
     }
 
-    static async getAllFollowers() {
-        const [follows] = await db.query('SELECT * FROM followers');
-        return follows;
-    }
-
     static async getFollowersByUserId(userId) {
         const [followers] = await db.query(`
             SELECT 
@@ -36,6 +31,16 @@ class Follower {
         `, [userId]);
         
         return followers;
+    }
+
+    static async getFollowersCountByUserId(userId) {
+        const [count] = await db.query('SELECT COUNT(*) as count FROM followers WHERE follower_id = ?', [userId]);
+        return count[0].count;
+    }
+
+    static async getFollowingsCountByUserId(userId) {
+        const [count] = await db.query('SELECT COUNT(*) as count FROM followers WHERE following_id = ?', [userId]);
+        return count[0].count;
     }
 
     static async getFollowersByUserIdAndFollowerId(userId, followerId) {

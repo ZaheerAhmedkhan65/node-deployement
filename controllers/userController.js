@@ -2,13 +2,24 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Follower = require('../models/Follower');
 const Notification = require('../models/Notification');
+const {formateDate} = require('../middlware/timeFormate');
+
 
 const userController = {
     // Create a new post
     async profile(req, res) {
         try {
-            const userData = await User.findById(req.params.id);
-            console.log(userData);
+            let userData = await User.findById(req.params.id);
+            if(!userData) {
+                userData = await User.findById(req.user.userId);
+            }
+            userData.created_at = formateDate(userData.created_at);
+            const posts = await Post.getPostsCountByUser(req.params.id);
+            const followers = await Follower.getFollowersCountByUserId(req.params.id);
+            const following = await Follower.getFollowingsCountByUserId(req.params.id);
+            userData.posts = posts;
+            userData.followers_count = followers;
+            userData.following_count = following;
             res.status(201).render("profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
         } catch (error) {
             console.error('Error creating post:', error);

@@ -7,7 +7,6 @@ const { format } = require('date-fns');
 const authRoutes = require("./routes/authRoutes")
 const postsRoutes = require("./routes/postsRoutes")
 const userRoutes = require("./routes/userRoutes")
-const multer = require('multer');
 const cookieParser = require('cookie-parser');
 const authenticate = require('./middlware/authenticate');
 

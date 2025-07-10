@@ -12,11 +12,9 @@ router.get('/signup', (req, res) => {
                     return res.status(401).redirect('/auth/signin');
                 }
                 let user = decoded;
-                console.log(user.userId);
                 return res.render('signup', { title: "Sign up", user });
             });
         } else {
-            console.log("no token");
             return res.render('signup', { title: "Sign up", user: null });
         }
 });
@@ -29,11 +27,9 @@ router.get('/signin', (req, res) => {
                 return res.status(401).redirect('/auth/signin');
             }
             let user = decoded;
-            console.log(user.userId);
             return res.render('signin', { title: "Sign in", user });
         });
     } else {
-        console.log("no token");
         return res.render('signin', { title: "Sign in", user: null });
     }
 });

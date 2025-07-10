@@ -52,7 +52,6 @@ const login = async (req, res) => {
         return res.status(400).json({ message: 'Invalid credentials' });
     }
      // Store user in session
-    // Generate JWT with role
             const token = jwt.sign(
                 { 
                     userId: user.id, 
@@ -99,8 +98,6 @@ const forgotPassword = async (req, res) => {
             resetTokenExpiry: resetTokenExpiry.toISOString().slice(0, 19).replace('T', ' ')
             // Formats to: "YYYY-MM-DD HH:MM:SS"
         });
-
-        console.log("email : ",email);
 
         // Send email with reset link
         const resetUrl = `https://${req.headers.host}/auth/reset-password/${resetToken}`;

@@ -1,9 +1,9 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
 const { format } = require('date-fns');
-const { search } = require('../routes/authRoutes');
 const PostLike = require('../models/PostLike');
 const PostRepost = require('../models/PostRepost');
+const {formatRelativeTime} = require('../middlware/timeFormate');
 const db = require('../config/connection');
 
 const PostsController = {
@@ -141,8 +141,6 @@ const PostsController = {
             const { postId } = req.params;
             const userId = req.user.userId;
             
-            console.log("Starting repost - Post ID:", postId, "User ID:", userId);
-            
             // Verify the post exists first
             const [post] = await db.query('SELECT id FROM posts WHERE id = ?', [postId]);
             if (!post || post.length === 0) {
@@ -221,31 +219,5 @@ const response = trendingPosts.map(post => ({
 
 }
 
-// Add this helper function (you can put it in a utilities file)
-function formatRelativeTime(dateString) {
-    const now = new Date();
-    const postDate = new Date(dateString);
-    const seconds = Math.floor((now - postDate) / 1000);
-    
-    if (seconds < 60) {
-        return `${seconds}s ago`;
-    }
-    
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) {
-        return `${minutes}min ago`;
-    }
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        return `${hours}h ago`;
-    }
-    
-    // For dates older than 24 hours, show the day and month
-    return postDate.toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'short'
-    });
-}
 
 module.exports = PostsController;

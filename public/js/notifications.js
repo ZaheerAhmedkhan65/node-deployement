@@ -39,6 +39,15 @@ document.addEventListener("DOMContentLoaded", () => {
             throw new Error('Invalid notifications data received');
         }
 
+        if (notifications.length === 0) {
+            notificationsContainer.innerHTML = `
+                <div class="alert alert-info" role="alert">
+                    No notifications found.
+                </div>
+            `;
+            return;
+        }
+
         notificationsContainer.innerHTML = `
             <ul class="list-group">
                 ${notifications.map(notification => `

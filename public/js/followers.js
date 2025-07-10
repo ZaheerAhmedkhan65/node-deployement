@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
             followersContainer.innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-people fs-1 text-muted"></i>
-                    <p class="mt-3 text-muted">No followers yet</p>
+                    <p class="mt-3 text-muted">No followers yet.</p>
                 </div>
             `;
             return;

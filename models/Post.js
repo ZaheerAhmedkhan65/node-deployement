@@ -35,6 +35,11 @@ class Post {
         return posts;
     }
 
+    static async getPostsCountByUser(userId) {
+        const [count] = await db.query('SELECT COUNT(*) as count FROM posts WHERE user_id = ?', [userId]);
+        return count[0].count;
+    }
+
     // Update a post
     static async updatePost(id, title, content, published_at) {
         await db.query(
