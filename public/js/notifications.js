@@ -57,12 +57,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         <a href="/users/${notification.actor_id}/profile" class="text-decoration-none d-flex align-items-center flex-grow-1">
                             <img src="${notification.actor_avatar}" alt="${notification.name}" class="rounded-circle me-2" width="40" height="40">
                         </a>
-                            <h6 class="card-title m-0">${notification.actor_name}</h6>
+                        <div class="d-flex flex-column">
+                            <b class="card-title m-0">${notification.actor_name}</b>
+                            <p class="card-text m-0"> ${notification.message} </p>
                         </div>
-                        <small class="text-muted">${notification.time_display}</small>
                         </div>
-
-                        <p style="margin:0px 0px 0px 55px;"> ${notification.message} </p>
+                        <small class="text-muted">${notification.created_at}</small>
+                        </div>
                     </li>
                 `).join('')}
             </ul>

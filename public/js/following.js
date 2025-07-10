@@ -1,17 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const followersContainer = document.querySelector("#followers-container");
+    const followingsContainer = document.querySelector("#following-container");
     
     // Show loading state
-    followersContainer.innerHTML = `
+    followingsContainer.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2">Loading followers...</p>
+            <p class="mt-2">Loading followings...</p>
         </div>
     `;
-
-    fetch(`/users/${userId}/followers`, {
+    
+    const followingForm = document.querySelector("#following-form");
+    if(followingForm){
+ followingForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        fetch(followingForm.action, {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -19,14 +23,18 @@ document.addEventListener("DOMContentLoaded", () => {
         credentials: "include",
     })
     .then(handleResponse)
-    .then(displayFollowers)
+    .then(displayFollowings)
     .catch(handleError);
+    })
+   
+    }
+    
 
     function handleResponse(response) {
         if (!response.ok) {
             // Handle specific error codes
             if (response.status === 401) {
-                window.location.href = '/login';
+                window.location.href = '/auth/signin';
                 return;
             }
             throw new Error(`Server returned ${response.status}`);
@@ -34,57 +42,54 @@ document.addEventListener("DOMContentLoaded", () => {
         return response.json();
     }
 
-    function displayFollowers(followers) {
-        if (!followers || !Array.isArray(followers)) {
-            throw new Error("Invalid followers data received");
+    function displayFollowings(followings) {
+        if (!followings || !Array.isArray(followings)) {
+            throw new Error("Invalid followings data received");
         }
 
-        if (followers.length === 0) {
-            followersContainer.innerHTML = `
+        if (followings.length === 0) {
+            followingsContainer.innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-people fs-1 text-muted"></i>
-                    <p class="mt-3 text-muted">No followers yet.</p>
+                    <p class="mt-3 text-muted">No followings yet.</p>
                 </div>
             `;
             return;
         }
 
-        followersContainer.innerHTML = ''; // Clear loading state
+        followingsContainer.innerHTML = ''; // Clear loading state
         
-        followers.forEach((follower) => {
-            console.log(follower);
+        followings.forEach((following) => {
+            
             const followerCard = document.createElement("div");
             followerCard.classList.add("card", "mb-3");
             followerCard.innerHTML = `
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <img src="${follower.avatar || '/images/default-avatar.png'}" 
-                             alt="${follower.name}" 
+                        <img src="${following.avatar || '/images/default-avatar.png'}" 
+                             alt="${following.name}" 
                              class="rounded-circle me-3" 
                              width="64" 
                              height="64"
                              onerror="this.src='/images/default-avatar.png'">
                         <div class="flex-grow-1">
                             <h5 class="card-title mb-1">
-                                <a href="/users/${follower.id}/profile" class="text-decoration-none">
-                                    ${follower.name}
+                                <a href="/users/${following.id}/profile" class="text-decoration-none">
+                                    ${following.name}
                                 </a>
                             </h5>
-                            <p class="text-muted mb-1">@${follower.username || follower.email.split('@')[0]}</p>
-                            ${follower.bio ? `<p class="card-text mt-2">${follower.bio}</p>` : ''}
+                            <p class="text-muted mb-1">@${following.username || following.email.split('@')[0]}</p>
+                            ${following.bio ? `<p class="card-text mt-2">${following.bio}</p>` : ''}
                         </div>
-                        <button class="btn ${follower.is_following ? 'btn-outline-secondary' : 'btn-primary'} follow-btn" 
-                                data-user-id="${follower.id}">
-                            ${follower.is_following ? 'Following' : 'Follow'}
-                        </button>
+                        <p class="text-muted">${following.followed_at}</p>
                     </div>
                 </div>
             `;
-            followersContainer.appendChild(followerCard);
+            followingsContainer.appendChild(followerCard);
         });
 
         // Add event delegation for follow buttons
-        followersContainer.addEventListener('click', handleFollowAction);
+        followingsContainer.addEventListener('click', handleFollowAction);
     }
 
     function handleFollowAction(e) {
@@ -125,10 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleError(error) {
-        console.error('Error loading followers:', error);
-        followersContainer.innerHTML = `
+        console.error('Error loading followings:', error);
+        followingsContainer.innerHTML = `
             <div class="alert alert-danger">
-                Failed to load followers. 
+                Failed to load followings. 
                 <button class="btn btn-link p-0" onclick="window.location.reload()">Try again</button>
             </div>
         `;

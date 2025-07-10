@@ -115,64 +115,66 @@
     
     // Handle follow/unfollow actions
     document.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('follow-btn')) {
-        const btn = e.target;
-        const userId = btn.dataset.userId;
-        const isFollowing = btn.classList.contains('btn-outline-success');
-        
-        try {
-          btn.disabled = true;
-          btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
-          
-          const response = await fetch(`/users/${userId}/follow`, {
-            method: isFollowing ? 'DELETE' : 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            credentials: 'include'
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Server returned ${response.status}`);
-          }
-          
-          const data = await response.json();
-          
-          // Update button state
-          if (isFollowing) {
-            btn.classList.remove('btn-outline-success');
-            btn.classList.add('btn-primary');
-            btn.textContent = 'Follow';
-          } else {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-outline-success');
-            btn.textContent = 'Following';
-          }
-          
-          // Update avatar border
-          const avatar = btn.closest('.list-group-item').querySelector('img');
-          if (avatar) {
-            avatar.classList.toggle('border-primary');
-            avatar.classList.toggle('border-success');
-          }
-          
-          // Show notification
-          showNotification(data.message || (isFollowing ? 'Unfollowed successfully' : 'Followed successfully'), 'success');
-          
-        } catch (error) {
-          console.error('Follow action failed:', error);
-          showNotification('Action failed. Please try again.', 'danger');
-        } finally {
-          btn.disabled = false;
-        }
+  if (e.target.classList.contains('follow-btn')) {
+    const btn = e.target;
+    const userId = btn.dataset.userId;
+    const isFollowing = btn.classList.contains('btn-outline-success');
+    const endpoint = isFollowing ? 'unfollow' : 'follow';
+    const method = isFollowing ? 'DELETE' : 'POST';
+    
+    try {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+      
+      const response = await fetch(`/users/${userId}/${endpoint}`, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server returned ${response.status}`);
       }
-    });
+      
+      const data = await response.json();
+      
+      // Update UI
+      if (isFollowing) {
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-primary');
+        btn.textContent = 'Follow';
+      } else {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-success');
+        btn.textContent = 'Following';
+      }
+      
+      // Update avatar border
+      const avatar = btn.closest('.list-group-item').querySelector('img');
+      if (avatar) {
+        avatar.classList.toggle('border-primary');
+        avatar.classList.toggle('border-success');
+      }
+      
+      showNotification(data.message, 'success');
+      
+    } catch (error) {
+      console.error('Follow action failed:', error);
+      showNotification(error.message || 'Action failed. Please try again.', 'danger');
+      // Reset button state if error occurs
+      btn.textContent = isFollowing ? 'Following' : 'Follow';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+});
     
     // Helper function to show notifications
     const showNotification = (message, type = 'info') => {
-      // Implement your notification system here
-      console.log(`${type}: ${message}`);
       // Example: Toast notification
       const toast = document.createElement('div');
       toast.className = `toast align-items-center text-white bg-${type} border-0 show`;

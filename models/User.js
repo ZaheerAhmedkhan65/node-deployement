@@ -90,10 +90,10 @@ class User {
     static async getSuggestedUsers(currentUserId) {
         // First get users that current user already follows
         const [following] = await db.query(
-            'SELECT following_id FROM followers WHERE follower_id = ?',
+            'SELECT followed_user_id FROM followers WHERE follower_user_id = ?',
             [currentUserId]
         );
-        const followingIds = following.map(f => f.following_id);
+        const followingIds = following.map(f => f.followed_user_id);
         
         // Add current user to excluded IDs
         const excludedIds = [...followingIds, currentUserId];
@@ -108,14 +108,14 @@ class User {
             SELECT 
                 u.*,
                 COUNT(DISTINCT p.id) * 0.5 AS post_score,
-                COUNT(DISTINCT f.follower_id) * 0.3 AS follower_score,
+                COUNT(DISTINCT f.follower_user_id) * 0.3 AS follower_score,
                 COUNT(DISTINCT r.id) * 0.2 AS recent_activity_score,
                 (COUNT(DISTINCT p.id) * 0.5 + 
-                COUNT(DISTINCT f.follower_id) * 0.3 + 
+                COUNT(DISTINCT f.follower_user_id) * 0.3 + 
                 COUNT(DISTINCT r.id) * 0.2) AS total_score
             FROM users u
             LEFT JOIN posts p ON u.id = p.user_id
-            LEFT JOIN followers f ON u.id = f.following_id
+            LEFT JOIN followers f ON u.id = f.followed_user_id
             LEFT JOIN (
                 SELECT user_id, id FROM posts 
                 WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)

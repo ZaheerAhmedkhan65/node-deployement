@@ -3,7 +3,7 @@ const User = require('../models/User');
 const { format } = require('date-fns');
 const PostLike = require('../models/PostLike');
 const PostRepost = require('../models/PostRepost');
-const {formatRelativeTime} = require('../middlware/timeFormate');
+const {formatRelativeTime, formatNumberCompact} = require('../middlware/timeFormate');
 const db = require('../config/connection');
 
 const PostsController = {
@@ -41,9 +41,9 @@ const PostsController = {
                     },
                     published_at: post.published_at ? formatRelativeTime(post.published_at) : null,
                     created_at: formatRelativeTime(post.created_at),
-                    likes: reactions.likes,
-                    dislikes: reactions.dislikes,
-                    reposts: repostCount,
+                    likes: formatNumberCompact(reactions.likes),
+                    dislikes: formatNumberCompact(reactions.dislikes),
+                    reposts: formatNumberCompact(repostCount),
                     userReaction,
                     hasReposted
                 };
@@ -127,7 +127,7 @@ const PostsController = {
 
             res.json({
                 ...result,
-                reactions,
+                reactions: formatNumberCompact(reactions),
                 userReaction: await Post.getUserReaction(postId, userId)
             });
         } catch (error) {
@@ -152,7 +152,7 @@ const PostsController = {
             const hasReposted = await Post.hasReposted(postId, userId);            
             res.json({
                 ...result,
-                repostCount,
+                repostCount: formatNumberCompact(repostCount),
                 hasReposted
             });
         } catch (error) {
@@ -204,7 +204,7 @@ const response = trendingPosts.map(post => ({
     userReaction: userReactions.get(post.id) || null,
     hasReposted: userReposts.has(post.id),
     isFallbackResults: post.is_fallback,
-    created_at: formatRelativeTime(post.created_at) // Add this line
+    created_at: formatRelativeTime(post.created_at)
 }));
         
         res.json(response);

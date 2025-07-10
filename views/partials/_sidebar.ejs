@@ -7,17 +7,9 @@
               <a class="text-decoration-none d-lg-none d-block" href="/">
                   <h3>Blog</h3>
               </a>
-              <a href="#posts" class="nav-link text-center text-lg-start px-0">
-                <i class="bi bi-file-earmark-text"></i>
-                <span class="d-none d-lg-inline"> Posts</span>
-              </a>
+              
 
-              <button type="button" class="nav-link text-center text-lg-start p-0 bg-transparent border-0" data-bs-toggle="modal" data-bs-target="#followersModal">
-                <a  href="#followers" class="nav-link text-center text-lg-start px-0">
-                  <i class="bi bi-people"></i>
-                  <span class="d-none d-lg-inline"> Followers</span>
-                </a>
-              </button>
+              
               <button type="button" class="nav-link text-center text-lg-start p-0 bg-transparent border-0" data-bs-toggle="modal" data-bs-target="#notificationsModal">
                 <a href="#notification" class="nav-link text-center text-lg-start px-0">
                   <i class="bi bi-bell"></i>
@@ -97,6 +89,7 @@
 
 
 
+<%- include('_following') %>
 <%- include('_followers') %>
 <%- include('_notifications') %>
 

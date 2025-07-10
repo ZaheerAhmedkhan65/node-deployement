@@ -2,7 +2,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Follower = require('../models/Follower');
 const Notification = require('../models/Notification');
-const {formateDate} = require('../middlware/timeFormate');
+const {formateDate, formatRelativeTime, formatNumberCompact} = require('../middlware/timeFormate');
 
 
 const userController = {
@@ -17,9 +17,9 @@ const userController = {
             const posts = await Post.getPostsCountByUser(req.params.id);
             const followers = await Follower.getFollowersCountByUserId(req.params.id);
             const following = await Follower.getFollowingsCountByUserId(req.params.id);
-            userData.posts = posts;
-            userData.followers_count = followers;
-            userData.following_count = following;
+            userData.posts = formatNumberCompact(posts);
+            userData.followers_count = formatNumberCompact(followers);
+            userData.following_count = formatNumberCompact(following);
             res.status(201).render("profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
         } catch (error) {
             console.error('Error creating post:', error);
@@ -49,7 +49,7 @@ const userController = {
                 ...user,
                 isFollowing: false
             }));
-            
+
             res.json(usersWithFollowingStatus);
         } catch (error) {
             console.error('Error getting suggested users:', error);
@@ -63,12 +63,14 @@ const userController = {
             const followingId = req.params.id;
             
             const isFollowing = await Follower.getFollowersByUserIdAndFollowerId(followerId, followingId);
+            
             if (isFollowing.length > 0) {
                 return res.status(400).json({ error: 'You are already following this user' });
             }
 
             const follow = await Follower.createFollower(followerId, followingId);
-            const notification = await Notification.createNotification(followingId, followerId, 'follow');
+            await Notification.createNotification(followingId, followerId, 'follow');
+            
             res.json({ follow, message: "User followed successfully" });
         } catch (error) {
             console.error('Error following user:', error);
@@ -77,20 +79,30 @@ const userController = {
     },
 
     async unfollowUser(req, res) {
-        try {
-            const followerId = req.user.userId;
-            const followingId = req.params.id;
-            const unfollow = await Follower.deleteFollower(followerId, followingId);
-            res.json({ unfollow, message: "User unfollowed successfully" });
-        } catch (error) {
-            console.error('Error unfollowing user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
+    try {
+        const followerId = req.user.userId;
+        const followingId = req.params.id;
 
-    async following(req, res) {
+        const isFollowing = await Follower.getFollowersByUserIdAndFollowerId(followerId, followingId);
+        if (isFollowing.length === 0) {
+            return res.status(400).json({ error: 'You are not following this user' });
+        }
+
+        const unfollow = await Follower.deleteFollower(followerId, followingId);
+        res.json({ unfollow, message: "User unfollowed successfully" });
+    } catch (error) {
+        console.error('Error unfollowing user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+},
+
+    async followers(req, res) {
         try {
-            const following = await Follower.getFollowingsByUserId(req.params.id);
+            let following = await Follower.getFollowingsByUserId(req.params.id);
+            following = following.map(following => ({
+                ...following,
+                followed_at: formatRelativeTime(following.followed_at)
+            }))
             res.json(following);
         } catch (error) {
             console.error('Error getting follows:', error);
@@ -98,10 +110,14 @@ const userController = {
         }
     },
 
-    async followers(req, res) {
+    async following(req, res) {
         try {
-            const followers = await Follower.getFollowersByUserId(req.params.id);
-            res.json(followers);
+            let followings = await Follower.getFollowersByUserId(req.params.id);
+            followings = followings.map(follower => ({
+                ...follower,
+                followed_at: formateDate(follower.followed_at)
+            }))
+            res.json(followings);
         } catch (error) {
             console.error('Error getting followers:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -110,7 +126,11 @@ const userController = {
 
     async notifications(req, res) {
         try {
-            const notifications = await Notification.getNotificationsByUserId(req.params.id);
+            let notifications = await Notification.getNotificationsByUserId(req.params.id);
+            notifications = notifications.map(notification => ({
+                ...notification,
+                created_at: formatRelativeTime(notification.created_at)
+            }))
             res.json(notifications);
         } catch (error) {
             console.error('Error getting notifications:', error);
