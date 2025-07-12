@@ -6,11 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const postsCache = new Map();
     
     // Pre-compiled template
-    const postTemplate = (post) => `
-        <div class="card mb-3 post-card" id="post-${post.id}">
+    const postTemplate = (post) => {
+      // Skip rendering draft posts if the visitor is not the owner
+      if (!post.published_at && post.user.id != userId) {
+          return document.createElement('div'); // Return empty div that won't be displayed
+      }
+    const postElement = document.createElement('div');
+    postElement.classList.add('card', 'rounded-0', 'post-card');
+    postElement.id = `post-${post.id}`;
+    postElement.innerHTML = `
             <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
+                    <div class="d-flex align-items-statrt mb-2">
                         <a href="/users/${post.user.id}/profile" class="text-decoration-none">
                         <img src="${post.user.avatar || '/images/default-avatar.png'}" 
                              alt="${post.user.name}" 
@@ -19,40 +25,83 @@ document.addEventListener('DOMContentLoaded', async () => {
                              height="40"
                              loading="lazy">
                         </a>
-                        <h5 class="mb-auto post-author-name">${post.user.name}</h5>
+                        <div class="d-flex flex-column w-100">
+                          <div class="d-flex justify-content-between mb-2" >
+                            <div class="d-flex align-items-start">
+                              <div class="d-flex flex-column">
+                                <a href="/users/${post.user.id}/profile" class="text-decoration-none">
+                                  <p class="m-0 mb-auto fw-bold post-author-name" style="line-height: 1;">${post.user.name}</p>
+                                </a>
+                                <a href="/users/${post.user.id}/profile" class="text-decoration-none">
+                                  <p class="m-0 mb-auto post-author-name text-muted" style="line-height: 1;">@${post.user.email.split('@')[0]}</p>
+                                </a>
+                              </div>
+                              <p class="m-0 text-muted" style="line-height: 1; font-size: 1rem;"><i class="bi bi-dot"></i> ${post.created_at}</p>
+                              ${post.user.id  == userId ? `
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="post-status">
+                                ${post.published_at ? '' : '<span class="badge bg-secondary">Draft</span>'}
+                              </span>
+                              ` : ''}
+                              <div class="dropdown">
+                                <button class="border-0 bg-transparent p-0 " type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                  <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu p-0">
+                                  ${post.user.id == userId ? `
+                                  <li class="dropdown-item p-0">
+                                  <button id="edit-post-btn-${post.id}" class="dropdown-item edit-post-btn" 
+                                    data-bs-toggle="modal" data-bs-target="#editPostModal" 
+                                    data-id="${post.id}"
+                                    data-title="${post.title}" 
+                                    data-content="${post.content}"
+                                    data-published_at="${post.published_at}">
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+                                  </button>
+                                  </li>
+                                  <li class="dropdown-item p-0">
+                                    <button type="button" data-post-id="${post.id}" class="dropdown-item delete-post-btn">
+                                      <i class="bi bi-trash"></i>
+                                      Delete
+                                    </button>
+                                  </li>
+                                  ` : ''}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                            <p class="card-title fw-semibold post-title m-0 mb-1" style="line-height: 1; font-size: 1.2rem;">${post.title}</p>
+                            <p class="card-text post-content" style="line-height: 1; font-size: 1rem;">${formatPostContent(post.content)}</p>
+                        </div>
                     </div>
-                    <div class="text-muted small mb-3">
-                        ${post.created_at}
-                        ${post.isFallbackResults ? ' <span class="badge bg-warning">Earlier</span>' : ''}
-                    </div>
-                </div>   
-                <h5 class="card-title" style="margin: 0px 0px 0px 45px;">${post.title}</h5>
-                <p class="card-text" style="margin: 0px 0px 0px 45px;">${post.content}</p>
-                <div style="margin:15px 0px -15px 45px;" class="d-flex justify-content-between align-items-center">
-                    <div class="btn-group reaction-buttons">
-                        <button class="btn btn-sm ${post.userReaction === 'like' ? 'btn-success' : 'btn-outline-success'} like-btn" 
-                                data-post-id="${post.id}">
-                            <i class="bi bi-hand-thumbs-up"></i> <span class="like-count">${post.like_count || 0}</span>
-                        </button>
-                        <button class="btn btn-sm ${post.userReaction === 'dislike' ? 'btn-danger' : 'btn-outline-danger'} dislike-btn" 
-                                data-post-id="${post.id}">
-                            <i class="bi bi-hand-thumbs-down"></i> <span class="dislike-count">${post.dislike_count || 0}</span>
-                        </button>
-                        <button class="btn btn-sm ${post.hasReposted ? 'btn-primary' : 'btn-outline-primary'} repost-btn" 
-                                data-post-id="${post.id}">
-                            <i class="bi bi-arrow-repeat"></i> <span class="repost-count">${post.repost_count || 0}</span>
-                        </button>
-                    </div>
-                    <span class="badge bg-secondary">
-                        🔥 ${Math.round(post.engagement_score || 0)}
-                    </span>
                 </div>
+
+                <div class="card-footer bg-transparent py-0">
+                  <div class="d-flex align-items-center justify-content-between reaction-buttons">
+                        <button class="btn p-0 btn-sm bg-transparent border-0 outline-0 ${post.userReaction === 'like' ? 'text-primary' : 'text-dark'} like-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-hand-thumbs-up"></i> <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        <button class="btn p-0 btn-sm bg-transparent border-0 outline-0 ${post.userReaction === 'dislike' ? 'text-primary' : 'text-dark'} dislike-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-hand-thumbs-down"></i> <span class="dislike-count">${post.dislikes || 0}</span>
+                        </button>
+                        <button class="btn p-0 btn-sm bg-transparent border-0 outline-0 ${post.hasReposted ? 'text-primary' : 'text-dark'} repost-btn" 
+                                data-post-id="${post.id}">
+                            <i class="bi bi-arrow-repeat"></i> <span class="repost-count">${post.reposts || 0}</span>
+                        </button>
+                    </div>
+                </div>
+                    
             </div>
-        </div>
     `;
+    return postElement;
+  }
 
     // Function to load posts
-    const loadTrendingPosts = async (period = '1 HOUR') => {
+    const loadTrendingPosts = async (period = '7 DAY') => {
         try {
             // Show cached content immediately if available
             if (postsCache.has(period)) {
@@ -82,13 +131,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!posts || !Array.isArray(posts)) {
                 throw new Error('Invalid posts data received');
             }
-
+            
+            postsContainer.innerHTML = '';
             // Render posts
-            const postsHTML = posts.map(postTemplate).join('');
-            postsContainer.innerHTML = postsHTML;
+            posts.forEach((post) => {
+                const postElement = postTemplate(post);
+                postsContainer.appendChild(postElement);
+            })
             
             // Cache the rendered HTML
-            postsCache.set(period, postsHTML);
+            postsCache.set(period, postsContainer.innerHTML);
             
             // Initialize event listeners
             setupReactionButtons();
@@ -120,3 +172,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial load
     loadTrendingPosts();
 });
+
+
+function formatPostContent(content) {
+  if (!content) return '';
+
+  // Convert fenced code blocks (e.g., ```js\ncode\n```)
+  content = content.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
+  });
+
+  // Convert inline code (`code`)
+  content = content.replace(/`([^`\n]+)`/g, (match, code) => {
+    return `<code>${escapeHtml(code)}</code>`;
+  });
+
+  // Convert URLs into clickable links
+  content = content.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+
+  // Convert line breaks to <br> for HTML rendering
+  content = content.replace(/\n/g, '<br>');
+
+  return content;
+}
+
+// Helper to escape HTML characters
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}

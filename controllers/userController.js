@@ -20,7 +20,7 @@ const userController = {
             userData.posts = formatNumberCompact(posts);
             userData.followers_count = formatNumberCompact(followers);
             userData.following_count = formatNumberCompact(following);
-            res.status(201).render("profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
+            res.status(201).render("user/profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
         } catch (error) {
             console.error('Error creating post:', error);
             res.status(500).json({ error: 'Internal Server Error' });

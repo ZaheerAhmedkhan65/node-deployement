@@ -12,10 +12,10 @@ router.get('/signup', (req, res) => {
                     return res.status(401).redirect('/auth/signin');
                 }
                 let user = decoded;
-                return res.render('signup', { title: "Sign up", user });
+                return res.render('auth/signup', { title: "Sign up", user });
             });
         } else {
-            return res.render('signup', { title: "Sign up", user: null });
+            return res.render('auth/signup', { title: "Sign up", user: null });
         }
 });
 
@@ -27,15 +27,15 @@ router.get('/signin', (req, res) => {
                 return res.status(401).redirect('/auth/signin');
             }
             let user = decoded;
-            return res.render('signin', { title: "Sign in", user });
+            return res.render('auth/signin', { title: "Sign in", user });
         });
     } else {
-        return res.render('signin', { title: "Sign in", user: null });
+        return res.render('auth/signin', { title: "Sign in", user: null });
     }
 });
 
 router.get('/forgot-password', (req, res) => {
-    res.render('forgot-password', { title: "Forgot Password", user: null });
+    res.render('auth/forgot-password', { title: "Forgot Password", user: null });
 });
 
 router.get('/reset-password/:token', authController.resetPassword);

@@ -35,9 +35,10 @@ const PostsController = {
                 return {
                     ...post,
                     user: {
-                        id: post.user_id, // or req.params.id
-                        name: post.name,  // from the joined user table
-                        avatar: post.avatar // from the joined user table
+                        id: post.user_id,
+                        name: post.name,
+                        avatar: post.avatar,
+                        email: post.email
                     },
                     published_at: post.published_at ? formatRelativeTime(post.published_at) : null,
                     created_at: formatRelativeTime(post.created_at),
@@ -48,7 +49,6 @@ const PostsController = {
                     hasReposted
                 };
             }));
-            
             res.json(posts);
         } catch (error) {
             console.error('Error fetching posts:', error);
@@ -124,10 +124,9 @@ const PostsController = {
 
             const result = await Post.toggleLike(postId, userId, type);
             const reactions = await Post.getReactions(postId);
-
             res.json({
                 ...result,
-                reactions: formatNumberCompact(reactions),
+                reactions: {reactions, likes: formatNumberCompact(reactions.likes), dislikes: formatNumberCompact(reactions.dislikes)},
                 userReaction: await Post.getUserReaction(postId, userId)
             });
         } catch (error) {
@@ -216,7 +215,6 @@ const response = trendingPosts.map(post => ({
         });
     }
 }
-
 }
 
 

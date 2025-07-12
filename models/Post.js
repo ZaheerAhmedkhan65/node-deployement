@@ -26,7 +26,7 @@ class Post {
     // Get all posts by a specific user
     static async getPostsByUser(userId) {
         const [posts] = await db.query(`
-            SELECT p.*, u.name, u.avatar 
+            SELECT p.*, u.name, u.avatar, u.email
             FROM posts p
             JOIN users u ON p.user_id = u.id
             WHERE p.user_id = ?
@@ -57,9 +57,8 @@ class Post {
         return post[0]; // Return deleted post data if needed
     }
 
-    static async searchPost(query){
-        console.log("nskmcsmcskcm",query);
-        const [results] = await db.query('SELECT * FROM posts WHERE title LIKE ? OR content LIKE ?',[`%${query}%`, `%${query}%`]);
+    static async searchPost(query) {
+        const [results] = await db.query('SELECT * FROM posts WHERE title LIKE ? OR content LIKE ?', [`%${query}%`, `%${query}%`]);
         return results;
     }
 
@@ -69,7 +68,7 @@ class Post {
             'SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?',
             [postId, userId]
         );
-    
+
         if (existing && existing.length > 0) {
             const currentType = existing[0].type;
             if (currentType === type) {
@@ -127,7 +126,7 @@ class Post {
             'SELECT * FROM post_reposts WHERE post_id = ? AND user_id = ?',
             [postId, userId]
         );
-    
+
         if (existing && existing.length > 0) {
             // Remove repost
             await db.query(
@@ -161,16 +160,15 @@ class Post {
         return result.length > 0;
     }
 
-    // models/Post.js
     static async getTrendingPosts(limit = 10, timePeriod = '1 HOUR') {
         try {
             // Use a single query with conditional logic
             const query = `
                 SELECT 
                     p.*,
-                    COUNT(DISTINCT l.id) AS like_count,
-                    COUNT(DISTINCT dl.id) AS dislike_count,
-                    COUNT(DISTINCT r.id) AS repost_count,
+                    COUNT(DISTINCT l.id) AS likes,
+                    COUNT(DISTINCT dl.id) AS dislikes,
+                    COUNT(DISTINCT r.id) AS reposts,
                     (COUNT(DISTINCT l.id) + (COUNT(DISTINCT r.id) * 2)) AS engagement_score,
                     CASE 
                         WHEN p.created_at >= NOW() - INTERVAL ${timePeriod} THEN FALSE
@@ -206,9 +204,8 @@ class Post {
             throw error;
         }
     }
-    
-    
-    
+
+
 }
 
 module.exports = Post;

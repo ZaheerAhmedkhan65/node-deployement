@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="d-flex justify-content-between">
                         <div class="d-flex gap-2">
                         <a href="/users/${notification.actor_id}/profile" class="text-decoration-none d-flex align-items-center flex-grow-1">
-                            <img src="${notification.actor_avatar}" alt="${notification.name}" class="rounded-circle me-2" width="40" height="40">
+                            <img src="${notification.actor_avatar || '/images/default-avatar.png'}" alt="${notification.name}" class="rounded-circle me-2" width="40" height="40">
                         </a>
                         <div class="d-flex flex-column">
                             <b class="card-title m-0">${notification.actor_name}</b>

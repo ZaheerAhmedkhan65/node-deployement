@@ -26,6 +26,8 @@ body{
     right: 10px;
 }
 
+
+
 .notification.error {
     background-color: #f8d7da;
     color: #721c24;
@@ -59,26 +61,8 @@ body{
 
 /* Add to your CSS */
 .reaction-buttons {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    margin: 5px 0px;
 }
-
-.like-btn.active {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.dislike-btn.active {
-    background-color: #f44336;
-    color: white;
-}
-
-.repost-btn.active {
-    background-color: #2196F3;
-    color: white;
-}
-
 
 .current-user-profile{
     display: flex;
@@ -93,15 +77,6 @@ body{
     font-size: 12px;
 }
 
-
-.time-filters{
-    position: sticky;
-    top: 0px;
-    z-index: 1000;
-    padding: 5px;
-    transition: 0.3s ease all;
-}
-
 #update-avatar-form{
     bottom: 10px;
     right: 5px;
@@ -112,14 +87,6 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.user-join-date{
-    font-size: 14px;
-}
-
-.user-posts{
-    font-size: 14px;;
 }
 
 @media (max-width: 762px) {
@@ -134,43 +101,4 @@ body{
     width: 20px;
     height: 20px;
 }
-    .time-filter{
-        font-size: 12px !important;
-        font-weight: bold !important;
-    }
-
-    .user-name{
-        font-size: 18px !important;
-        font-weight: bold;
-        width: 150px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-
-    .user-email{
-        font-size: 12px !important;
-        width: 150px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-
-    .user-join-date{
-        font-size: 12px !important;
-    }
-
-    .user-posts{
-        font-size: 12px !important;
-    }
-
-    .post-author-name{
-        font-size: 14px !important;
-        width: 100px;
-        font-weight: bold;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-    
 }

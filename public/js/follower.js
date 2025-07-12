@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     ${follower.name}
                                 </a>
                             </h5>
-                            <p class="text-muted mb-1">@${follower.username || follower.email.split('@')[0]}</p>
+                            <p class="text-muted mb-1">@${follower.email.split('@')[0]}</p>
                             ${follower.bio ? `<p class="card-text mt-2">${follower.bio}</p>` : ''}
                         </div>
                         <p class="text-muted">${follower.followed_at}</p>

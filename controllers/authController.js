@@ -56,7 +56,6 @@ const login = async (req, res) => {
                 { 
                     userId: user.id, 
                     username: user.name,
-                    role: user.role,
                     email: user.email,
                     avatar: user.avatar
                 }, 
@@ -132,7 +131,6 @@ const forgotPassword = async (req, res) => {
 
 const refreshToken = async (req, res) => {
     const token = req.cookies.token;
-    
     if (!token) {
         return res.status(401).json({ message: 'No token provided' });
     }
@@ -149,14 +147,14 @@ const refreshToken = async (req, res) => {
         // Issue a new token with renewed expiration
         const newToken = jwt.sign(
             { 
-                userId: decoded.userId, 
-                username: decoded.username,
-                role: user.role 
+                userId: user.id, 
+                username: user.name,
+                email: user.email,
+                avatar: user.avatar
             }, 
             process.env.JWT_SECRET, 
             { expiresIn: '7d' }
-        );
-        
+        );;
         res.cookie('token', newToken, { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production',
