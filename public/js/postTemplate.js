@@ -72,7 +72,7 @@ function postTemplate(post) {
     </div>
 
     <div class="card-footer bg-transparent py-1">
-      <div class="d-flex align-items-center justify-content-between reaction-buttons px-2">
+      <div class="d-flex align-items-center justify-content-between reaction-buttons my-1 px-2">
         <button class="btn p-0 btn-sm bg-transparent border-0 ${post.userReaction === 'like' ? 'text-primary' : 'text-dark'} like-btn"
                 data-post-id="${post.id}">
           <i class="bi bi-hand-thumbs-up"></i> <span class="like-count">${post.likes || 0}</span>

@@ -1,9 +1,9 @@
-<div class="col-lg-3 d-none d-lg-block">
-  <div class="card" style="top: 20px;">
+<div class="col-lg-3 d-none d-lg-block py-3 px-2">
+  <div class="card">
     <div class="card-body">
-      <h3 class="card-title">Suggested Users</h3>
-      <ul class="suggested-users-container list-group list-group-flush">
-        <div class="text-center my-5">
+      <p class="card-title fw-bold fs-5 mb-0">Suggested Users</p>
+      <ul class="suggested-users-container list-group list-group-flush p-0">
+        <div class="my-3">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
@@ -25,7 +25,7 @@
       try {
         // Show loading state
         suggestedUsersContainer.innerHTML = `
-          <div class="text-center my-5">
+          <div class="text-center my-3">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
@@ -59,7 +59,7 @@
 
         if (filteredUsers.length === 0) {
           suggestedUsersContainer.innerHTML = `
-            <li class="list-group-item text-center text-muted">
+            <li class="list-group-item text-muted p-0">
               No suggestions available
             </li>
           `;
@@ -73,7 +73,7 @@
       } catch (error) {
         console.error('Error getting suggested users:', error);
         suggestedUsersContainer.innerHTML = `
-          <li class="list-group-item text-center text-danger">
+          <li class="list-group-item text-danger p-0">
             Failed to load suggestions. <button class="btn btn-link p-0" onclick="loadSuggestedUsers()">Try again</button>
           </li>
         `;
