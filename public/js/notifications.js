@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `;
 
-    fetch(`/users/${userId}/notifications`, {
+    fetch(`/${userId}/notifications`, {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -50,23 +50,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
         notificationsContainer.innerHTML = `
             <ul class="list-group">
-                ${notifications.map(notification => `
-                    <li class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                        <div class="d-flex gap-2">
-                        <a href="/users/${notification.actor_id}/profile" class="text-decoration-none d-flex align-items-center flex-grow-1">
-                            <img src="${notification.actor_avatar || '/images/default-avatar.png'}" alt="${notification.name}" class="rounded-circle me-2" width="40" height="40">
-                        </a>
-                        <div class="d-flex flex-column">
-                            <b class="card-title m-0">${notification.actor_name}</b>
-                            <p class="card-text m-0"> ${notification.message} </p>
-                        </div>
-                        </div>
-                        <small class="text-muted">${notification.created_at}</small>
-                        </div>
-                    </li>
-                `).join('')}
-            </ul>
+  ${notifications.map(notification => `
+    <li class="list-group-item">
+        <div class="d-flex justify-content-between flex-grow-1">
+            <div class="d-flex align-items-center gap-2">
+                <a href="/${notification.actor_name}" class="text-decoration-none text-dark">
+                  <img src="${notification.actor_avatar || '/images/default-avatar.png'}" alt="${notification.actor_avatar}" class="rounded-circle me-2" width="40" height="40">
+                </a>
+                <div class="d-flex flex-column">
+                  <a href="/${notification.actor_name}" class="text-decoration-none text-dark">
+                      <b class="card-title m-0">${notification.actor_name}</b>
+                  </a>
+                  <a href="/${notification.post_id ? `${notification.actor_name}/status/${notification.post_id}` : notification.actor_name}" class="text-decoration-none text-dark">
+                      <p class="card-text m-0">${notification.message}</p>
+                  </a>
+                </div>
+            </div>
+          <small class="text-muted ms-3">${notification.created_at}</small>
+        </div>
+    </li>
+  `).join('')}
+</ul>
         `;
     }
 

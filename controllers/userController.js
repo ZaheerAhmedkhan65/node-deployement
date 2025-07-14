@@ -8,24 +8,40 @@ const {formateDate, formatRelativeTime, formatNumberCompact} = require('../middl
 const userController = {
     // Create a new post
     async profile(req, res) {
-        try {
-            let userData = await User.findById(req.params.id);
-            if(!userData) {
-                userData = await User.findById(req.user.userId);
-            }
-            userData.created_at = formateDate(userData.created_at);
-            const posts = await Post.getPostsCountByUser(req.params.id);
-            const followers = await Follower.getFollowersCountByUserId(req.params.id);
-            const following = await Follower.getFollowingsCountByUserId(req.params.id);
-            userData.posts = formatNumberCompact(posts);
-            userData.followers_count = formatNumberCompact(followers);
-            userData.following_count = formatNumberCompact(following);
-            res.status(201).render("user/profile",{ user:req.user,userData, title: "profile",userId: req.user.userId });
-        } catch (error) {
-            console.error('Error creating post:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+    try {
+        let userData = await User.findUser(req.params.name);
+        if(!userData && req.user) {  // Also check if req.user exists
+            userData = await User.findUser(req.user.name);
         }
-    },
+
+        // If still no user data found
+        if(!userData) {
+            return res.status(404).render('error', { 
+                message: 'User not found',
+                title: 'User Not Found'
+            });
+        }
+
+        userData.created_at = formateDate(userData.created_at);
+        const posts = await Post.getPostsCountByUser(userData.id);
+        const followers = await Follower.getFollowersCountByUserId(userData.id);
+        const following = await Follower.getFollowingsCountByUserId(userData.id);
+        
+        userData.posts = formatNumberCompact(posts);
+        userData.followers_count = formatNumberCompact(followers);
+        userData.following_count = formatNumberCompact(following);
+        
+        res.status(200).render("user/profile", { 
+            user: req.user,
+            userData, 
+            title: "profile",
+            userId: req.user ? req.user.userId : null 
+        });
+    } catch (error) {
+        console.error('Error getting user profile data:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+},
 
     async updateProfile(req,res) {
         try {
@@ -98,7 +114,7 @@ const userController = {
 
     async followers(req, res) {
         try {
-            let following = await Follower.getFollowingsByUserId(req.params.id);
+            let following = await Follower.getFollowersByUserId(req.params.id);
             following = following.map(following => ({
                 ...following,
                 followed_at: formatRelativeTime(following.followed_at)
@@ -112,7 +128,7 @@ const userController = {
 
     async following(req, res) {
         try {
-            let followings = await Follower.getFollowersByUserId(req.params.id);
+            let followings = await Follower.getFollowingsByUserId(req.params.id);
             followings = followings.map(follower => ({
                 ...follower,
                 followed_at: formateDate(follower.followed_at)

@@ -1,10 +1,10 @@
 const db = require('../config/connection');
 
 class Notification {
-    static async createNotification(userId, actor_id, type='follow') {
+    static async createNotification(userId, actor_id, type='follow', post_id=null) {
         const [result] = await db.query(
-            'INSERT INTO notifications (user_id, actor_id, type) VALUES (?, ?, ?)',
-            [userId, actor_id, type]
+            'INSERT INTO notifications (user_id, actor_id, type, post_id) VALUES (?, ?, ?, ?)',
+            [userId, actor_id, type, post_id]
         );
         const [notification] = await db.query('SELECT * FROM notifications WHERE id = ?', [result.insertId]);
         return notification[0];
@@ -15,8 +15,7 @@ class Notification {
             SELECT 
                 n.*,
                 u.name as actor_name,
-                u.avatar as actor_avatar,
-                p.title as post_title,
+                u.avatar as actor_avatar,\
                 p.id as post_id,
                 CASE 
                     WHEN n.type = 'new_post' THEN CONCAT(u.name, ' created a new post')
@@ -40,9 +39,13 @@ class Notification {
             ...notification,
             time_display: notification.hours_ago < 24 
                 ? `${notification.hours_ago}h ago` 
-                : new Date(notification.created_at).toLocaleDateString(),
-            is_new: !notification.is_read && notification.hours_ago < 24
+                : new Date(notification.created_at).toLocaleDateString()
         }));
+    }
+
+    static async markNotificationAsRead(notificationId) {
+        const [result] = await db.query('UPDATE notifications SET is_read = 1 WHERE id = ?', [notificationId]);
+        return result.affectedRows > 0;
     }
 }
 

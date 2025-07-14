@@ -1,59 +1,45 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const postsContainer = document.querySelector(".posts-container");
-    const newPostModal = document.getElementById("newPostModal");
-    document.querySelector("#create-post-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-
-        try {
-            const response = await fetch("/posts/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            });
-
-            if (response.ok) {
-                const responseData = await response.json();
-                const newPost = responseData.post;
-                // Append the new post to the DOM or refresh the posts list
-                const bootstrapModal = bootstrap.Modal.getInstance(newPostModal);
-                bootstrapModal.hide();
-                createNewPost(newPost.title, newPost.content, newPost.published_at, newPost.id);
-                notification(responseData.message,"success");
-            } else {
-                console.error("Failed to create post");
-            }
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    });
-
-
-    function createNewPost(title, content, published_at, post_id) {
-        const li = document.createElement("li");
-        li.classList.add("card", "my-1");
-        li.setAttribute("id", `post-${post_id}`);
-        li.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <strong class="text-decoration-none">${title}</strong> 
-                            <span class="text-muted mx-2">${published_at}</span> 
-                            <p class="text-muted">${content}</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <button id="edit-post-btn-${post_id}" class="btn btn-sm btn-info edit-post-btn" data-bs-toggle="modal"
-                                data-bs-target="#editPostModal" data-id="${post_id}"
-                                data-title="${title}" data-content="${content}"
-                                data-published_at="${published_at}">
-                                Edit
-                            </button>
-                            <button type="button" data-post-id="${post_id}" class="btn btn-sm btn-danger delete-post-btn">Delete</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        postsContainer.appendChild(li);
+  const postsContainer = document.querySelector(".posts-container");
+  
+  // Initialize the PostEditor for creating posts
+  const createPostEditor = new PostEditor({
+    mode: 'create',
+    formId: 'create-post-form',
+    onSuccess: (responseData) => {
+      const newPost = responseData.post;
+      const bootstrapModal = bootstrap.Modal.getInstance(document.getElementById('newPostModal'));
+      bootstrapModal.hide();
+      const newPostElement = postTemplate(newPost);
+      postsContainer.prepend(newPostElement);
+      notification(responseData.message, "success");
+      // Reset form state
+      resetPostForm();
+      setupReactionButtons();
+    },
+    onError: (error) => {
+      console.error("Post creation failed:", error);
+      notification("Failed to create post", "error");
     }
+  });
+
+  // Helper function to reset the post form
+  function resetPostForm() {
+    const form = document.getElementById("create-post-form");
+    form.reset();
+    document.getElementById("content-editor").innerText = "";
+    document.getElementById("media_url").value = "";
+    document.getElementById("preview").src = "";
+    document.getElementById("preview").style.display = "none";
+    document.getElementById("editImageBtn").style.display = "none";
+    document.getElementById("removeImageBtn").style.display = "none";
+    document.getElementById("scheduled_at_input").value = "";
+    document.getElementById("scheduledTimeText").textContent = "";
+    document.getElementById("scheduledDisplay").style.display = "none";
+    document.getElementById("scheduleContainer").style.display = "none";
+    document.getElementById("schedulePostBtn").style.display = "inline-block";
+    
+    // Reset editor state
+    createPostEditor.setContent("");
+    createPostEditor.updateCharCounter(0);
+  }
 });

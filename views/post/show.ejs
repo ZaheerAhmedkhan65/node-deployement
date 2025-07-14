@@ -13,17 +13,18 @@
                       <div id="image-preview">
                           <img src="<%= userData.avatar || '/images/default-avatar.png' %>" class="rounded-circle" alt="<%= userData.name %>" style="width: 120px; height: 120px; object-fit: cover;">
                       </div>
-                      <% if (userData.id === userId) {%>
+                      <% if (userData.id === userId) { %>
                       <form id="update-avatar-form" class="position-absolute" action="/<%= userData.id %>/avatar/update" method="POST" enctype="multipart/form-data">
                           <div class="form-group">
                             <div id="upload-area">
                               <span id="plus-icon" style="font-size: 1rem; color: #888;">
-                                <i class="bi bi-pencil"></i>                              </span>
+                                <i class="bi bi-pencil"></i>
+                              </span>
                             </div>
                             <input type="file" id="image" name="image" accept="image/*" style="display: none;">
                           </div>
                         </form>
-                      <%}%>
+                      <% } %>
                   </div>
                   <div class="d-flex flex-column">
                       <h3 class="m-0 user-name"><%= userData.name %></h3>
@@ -37,7 +38,7 @@
                       </p>
                       <p class="m-0 user-posts"><%= userData.posts %> posts</p>
                   </div>
-                  <% if (userData.id === userId) {%>
+                  <% if (userData.id === userId) { %>
                   <div class="actions d-lg-none d-inline">
                       <div class="btn-group dropup">
                           <button type="button" class="border-0 p-0 bg-transparent" data-bs-toggle="dropdown" aria-expanded="false">
@@ -48,7 +49,7 @@
                           </ul>
                         </div>
                   </div>
-                  <%}%>
+                  <% } %>
               </div>
               <div class="d-flex gap-2">
                 <form id="following-form" action="/<%= userData.id %>/following" method="get" class="nav-link text-center text-lg-start px-0">
@@ -66,17 +67,11 @@
               </div>
           </div>
       </div>
-  </div>
+    </div>
     <div class="card border-0 m-0 p-0">
-      <div class="card-body m-0 p-0">
-        <h1>Posts</h1>
-        <div class="posts-container">
-          <div class="text-center my-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        </div>
+      <div class="card-body m-0 p-0 posts-container">
+        <!-- should post here -->
+      </div>
       </div>
     </div>
   </div>
@@ -84,108 +79,16 @@
   <!-- Suggested Column -->
   <%- include('../partials/_suggested') %>
 </div>
-
-<script>
-  const uploadArea = document.getElementById('upload-area');
-  const fileInput = document.getElementById('image');
-  const plusIcon = document.getElementById('plus-icon');
-  const updateAvatarForm = document.getElementById('update-avatar-form');
-
-  if(uploadArea && fileInput && plusIcon){
-  uploadArea.addEventListener('click', () => {
-    fileInput.click();
-  });
-
-  
-  fileInput.addEventListener('change', (event) => {
-    const preview = document.getElementById('image-preview');
-    const file = event.target.files[0];
-    if (file) {
-      fetch(updateAvatarForm.action, {
-      method: 'POST',
-      body: new FormData(updateAvatarForm),
-      credentials: 'include'
-    }).then(response => {
-      if (!response.ok) {
-        window.location.href = '/auth/signin';
-      }
-    }).then(() => {
-      window.location.reload();
-    });
-    }
-  });
-  }
+<script type="application/json" id="post-data">
+    <%- JSON.stringify(post) %>
 </script>
-
-<script>
-  const userEmail = "<%= userData.email %>";
-  const userDataId = "<%= userData.id %>";
-  const userId = "<%= userId %>";
-  const postsContainer = document.querySelector('.posts-container');
-  const timeFilters = document.querySelectorAll('.time-filter');
-  
-  // Cache for already loaded posts
-  const postsCache = new Map();
-
-  // Function to load posts
-  const loadUserPosts = async (period = '1 HOUR') => {
-    try {
-      // Show cached content immediately if available
-      if (postsCache.has(period)) {
-        postsContainer.innerHTML = postsCache.get(period);
-        setupReactionButtons();
-        return;
-      }
-      
-      // Show loading state
-      postsContainer.innerHTML = `
-        <div class="text-center my-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      `;
-      
-      // Fetch data with cache-busting
-      const response = await fetch(`/posts/users/${userDataId}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
-
-      const posts = await response.json();
-      
-      if (!posts || !Array.isArray(posts)) {
-        throw new Error('Invalid posts data received');
-      }
-
-      // Cache the loaded posts
-      postsCache.set(period, postsContainer.innerHTML);
-      // Clear previous posts
-      postsContainer.innerHTML = '';
-      if(posts.length == 0){
-        postsContainer.innerHTML = `<p class="text-dark">No posts created by <a href="/${userDataId}/profile" class="badge bg-primary-subtle text-dark fw-bold text-decoration-none">@${userEmail.split('@')[0]}</a> yet.</p>`;
-      }else{
- // Add new posts to the container
-      posts.forEach((post) => {
-        const postElement = postTemplate(post);
-        postsContainer.appendChild(postElement);
-      });
-
-      setupReactionButtons();
-      }
-
-     
-    } catch (error) {
-      console.error('Error:', error);
-      postsContainer.innerHTML = `<p class="text-danger">Error loading posts: ${error.message}</p>`;
-    }
-  };
-
-  // Initial load
-  loadUserPosts();
-
+<script type="application/json" id="user-data">
+    <%- JSON.stringify(userData) %>
 </script>
-
+<script>
+  const post = document.getElementById("post-data").textContent;
+  const userData = document.getElementById("user-data").textContent;
+  const userId = "<%= user.userId %>";
+</script>
+<script src="/js/post.js"></script>
 <%- include('../partials/_footer') %>

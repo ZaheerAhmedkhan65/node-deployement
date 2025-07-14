@@ -33,7 +33,7 @@
         `;
         
         // Fetch data
-        const response = await fetch('/users/suggested_user', {
+        const response = await fetch('/suggested_user', {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -89,7 +89,7 @@
       
       userElement.innerHTML = `
         <div class="d-flex align-items-center justify-content-between">
-          <a href="/users/${user.id}/profile" class="text-decoration-none d-flex align-items-center flex-grow-1">
+          <a href="/${user.name}" class="text-decoration-none d-flex align-items-center flex-grow-1">
             <img src="${user.avatar || '/images/default-avatar.png'}" 
                  alt="${user.name}" 
                  class="rounded-circle me-2 border border-2 ${isFollowing ? 'border-success' : 'border-primary'}" 
@@ -126,7 +126,7 @@
       btn.disabled = true;
       btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
       
-      const response = await fetch(`/users/${userId}/${endpoint}`, {
+      const response = await fetch(`/${userId}/${endpoint}`, {
         method: method,
         headers: {
           'Content-Type': 'application/json',

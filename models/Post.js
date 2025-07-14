@@ -2,11 +2,58 @@ const db = require('../config/connection');
 
 class Post {
     // Create a new post
-    static async createPost(title, content, published_at, user_id) {
+    static async createPost(content, user_id, media_url, parent_post_id, is_draft, scheduled_at, published_at) {
         const [result] = await db.query(
-            'INSERT INTO posts (title, content, published_at, user_id) VALUES (?, ?, ?, ?)',
-            [title, content, published_at, user_id]
+            `
+        INSERT INTO posts (
+            content,
+            user_id,
+            media_url,
+            parent_post_id,
+            is_draft,
+            scheduled_at,
+            published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+            [
+                content,
+                user_id,
+                media_url,
+                parent_post_id,
+                is_draft,
+                scheduled_at,
+                published_at
+            ]
         );
+
+        const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [result.insertId]);
+        return post[0];
+    }
+
+    static async createPost(content, user_id, media_url, parent_post_id, is_draft, scheduled_at, published_at) {
+        const [result] = await db.query(
+            `
+        INSERT INTO posts (
+            content,
+            user_id,
+            media_url,
+            parent_post_id,
+            is_draft,
+            scheduled_at,
+            published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+            [
+                content,
+                user_id,
+                media_url,
+                parent_post_id,
+                is_draft,
+                scheduled_at,
+                published_at
+            ]
+        );
+
         const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [result.insertId]);
         return post[0];
     }
@@ -14,6 +61,16 @@ class Post {
     // Get post by ID
     static async getPostById(id) {
         const [post] = await db.query('SELECT * FROM posts WHERE id = ?', [id]);
+        return post[0];
+    }
+
+    static async getPostDataById(id) {
+        const [post] = await db.query(`
+            SELECT p.*, u.name, u.avatar, u.email
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.id = ?
+        `, [id]);
         return post[0];
     }
 
@@ -41,10 +98,10 @@ class Post {
     }
 
     // Update a post
-    static async updatePost(id, title, content, published_at) {
+    static async updatePost(id, content, user_id, media_url, parent_post_id, is_draft, scheduled_at, published_at) {
         await db.query(
-            'UPDATE posts SET title = ?, content = ?, published_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [title, content, published_at, id]
+            'UPDATE posts SET content = ?, user_id = ?, media_url = ?, parent_post_id = ?, is_draft = ?, scheduled_at = ?, published_at = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [content, user_id, media_url, parent_post_id, is_draft, scheduled_at, published_at, id]
         );
         const [updatedPost] = await db.query('SELECT * FROM posts WHERE id = ?', [id]);
         return updatedPost[0];
@@ -58,7 +115,7 @@ class Post {
     }
 
     static async searchPost(query) {
-        const [results] = await db.query('SELECT * FROM posts WHERE title LIKE ? OR content LIKE ?', [`%${query}%`, `%${query}%`]);
+        const [results] = await db.query('SELECT * FROM posts WHERE content LIKE ?', [`%${query}%`]);
         return results;
     }
 
@@ -196,7 +253,7 @@ class Post {
                     engagement_score DESC
                 LIMIT ${limit}
             `;
-            
+
             const [posts] = await db.query(query);
             return posts;
         } catch (error) {

@@ -34,6 +34,41 @@ body{
     right: 10px;
 }
 
+
+.content-editor {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow-y: auto;
+  overflow-x: hidden; /* prevents horizontal overflow */
+  max-height: 300px;
+  min-width: 0; /* ensure it doesn't overflow parent */
+  width: 100%; /* make sure it fits inside flex container */
+  display: block;
+}
+
+.flex-grow-1 {
+  min-width: 0; /* fix for flex children overflowing horizontally */
+}
+
+
+.content-editor[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: #6c757d;
+    opacity: 0.6;
+}
+
+.post-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+
+.current-user-profile[style*="color: #f4212e"]::placeholder {
+    color: #f4212e;
+    opacity: 0.8;
+}
+
 .auth-card {
     max-width: 400px;
     margin: 0 auto;
@@ -88,6 +123,20 @@ body{
     align-items: center;
     justify-content: center;
 }
+
+.truncate-text {
+  max-width: 165px;     /* You can adjust this width as needed */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .truncate-text {
+    max-width: 130px;
+  }
+}
+
 
 @media (max-width: 762px) {
     #image-preview img{

@@ -16,7 +16,7 @@ class Follower {
         return follow[0]; // Return deleted follow data if needed
     }
 
-    static async getFollowersByUserId(userId) {
+    static async getFollowingsByUserId(userId) {
         const [followers] = await db.query(`
             SELECT 
                 u.id,
@@ -29,7 +29,6 @@ class Follower {
             WHERE f.follower_user_id = ?
             ORDER BY f.created_at DESC
         `, [userId]);
-        
         return followers;
     }
 
@@ -48,13 +47,14 @@ class Follower {
         return follows;
     }
 
-    static async getFollowingsByUserId(userId) {
+    static async getFollowersByUserId(userId) {
         const [follows] = await db.query(`
             SELECT 
                 u.id,
                 u.name,
                 u.email,
                 u.avatar,
+                u.id as follower_id,
                 f.created_at as followed_at
             FROM followers f
             JOIN users u ON f.follower_user_id = u.id

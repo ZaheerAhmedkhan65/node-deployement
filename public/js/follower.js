@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
                              onerror="this.src='/images/default-avatar.png'">
                         <div class="flex-grow-1">
                             <h5 class="card-title mb-1">
-                                <a href="/users/${follower.id}/profile" class="text-decoration-none">
+                                <a href="/${follower.name}" class="text-decoration-none">
                                     ${follower.name}
                                 </a>
                             </h5>
