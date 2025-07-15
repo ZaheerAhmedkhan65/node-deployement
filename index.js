@@ -28,7 +28,7 @@ app.use("/posts", postsRoutes);
 app.use("/media", mediaRoutes);
 app.use("/notifications", notificationsRoutes);
 
-app.get('/',authenticate, async (req, res) => {
+app.get('/', async(req, res) => {
     try {
         const user = req.user;
         return res.render('index', { title: 'Blog', user, userId: req.user.userId });
